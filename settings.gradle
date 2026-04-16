@@ -21,3 +21,4 @@ dependencyResolutionManagement {
 include ':app', ':wear', ':SeekArc_library', ':domoticzapi', ':materialList'
 include ':libs:MemorizingTrustManager'
 project(':SeekArc_library').projectDir = new File('libs/SeekArc_library')
+include ':libs:animated-clock-icon'

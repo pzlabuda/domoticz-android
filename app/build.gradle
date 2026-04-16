@@ -210,7 +210,7 @@ dependencies {
     }
 
     implementation 'com.google.guava:guava:33.4.8-android'
-    implementation 'com.github.alxrm:animated-clock-icon:1.0.2'
+    implementation project(':libs:animated-clock-icon')
     implementation 'androidx.multidex:multidex:2.0.1'
     implementation 'com.google.code.gson:gson:2.13.2'
     implementation 'com.android.volley:volley:1.2.1'

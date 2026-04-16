@@ -25,11 +25,6 @@ import com.google.android.gms.gcm.GcmNetworkManager;
 import com.google.android.gms.gcm.PeriodicTask;
 import com.google.android.gms.gcm.Task;
 import com.google.android.material.snackbar.Snackbar;
-import com.revenuecat.purchases.CustomerInfo;
-import com.revenuecat.purchases.Purchases;
-import com.revenuecat.purchases.PurchasesError;
-import com.revenuecat.purchases.interfaces.PurchaseCallback;
-import com.revenuecat.purchases.models.StoreTransaction;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -568,29 +563,6 @@ public class UsefulBits {
     }
 
     public static void openPremiumAppStore(Context context, SubscriptionsListener listener) {
-        if (AppController.premiumPackage == null) {
-            return;
-        }
-
-        Purchases.getSharedInstance().purchasePackage(
-                (Activity) context,
-                AppController.premiumPackage,
-                new PurchaseCallback() {
-                    @Override
-                    public void onError(@NonNull PurchasesError purchasesError, boolean b) {
-                    }
-
-                    @Override
-                    public void onCompleted(@NonNull StoreTransaction storeTransaction, @NonNull CustomerInfo customerInfo) {
-                        if (customerInfo.getEntitlements().get("premium").isActive()) {
-                            AppController.IsPremiumEnabled = true;
-                        }
-
-                        if (listener != null)
-                            listener.OnDone(AppController.IsPremiumEnabled);
-                    }
-                }
-        );
     }
 
     public static void ShowOldVersionDialog(Context context) {
@@ -605,7 +577,6 @@ public class UsefulBits {
     }
 
     public static void RestoreSubscriptions(Context context, SubscriptionsListener listener) {
-        AppController.HandleRestoreSubscriptions(listener);
     }
 
     public static byte[] toByteArray(Object obj) throws IOException {

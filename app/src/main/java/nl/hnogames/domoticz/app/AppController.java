@@ -30,15 +30,6 @@ import com.google.android.gms.analytics.Tracker;
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
 import com.google.android.gms.security.ProviderInstaller;
-import com.revenuecat.purchases.CustomerInfo;
-import com.revenuecat.purchases.EntitlementInfo;
-import com.revenuecat.purchases.EntitlementInfos;
-import com.revenuecat.purchases.Offerings;
-import com.revenuecat.purchases.Purchases;
-import com.revenuecat.purchases.PurchasesConfiguration;
-import com.revenuecat.purchases.PurchasesError;
-import com.revenuecat.purchases.interfaces.ReceiveCustomerInfoCallback;
-import com.revenuecat.purchases.interfaces.ReceiveOfferingsCallback;
 
 import org.altbeacon.beacon.BeaconConsumer;
 import org.altbeacon.beacon.BeaconManager;
@@ -85,9 +76,7 @@ public class AppController extends MultiDexApplication implements BootstrapNotif
     private static final String EDDYSTONE3_LAYOUT = "s:0-1=feaa,m:2-2=10,p:3-3:-41,i:4-20v";
 
     private static final String BACKGROUND_NOTIFICATION_CHANNEL_ID = "6516581";
-    public static boolean IsPremiumEnabled = false;
-    public static com.revenuecat.purchases.Package premiumPackage;
-    public static CustomerInfo customer;
+    public static final boolean IsPremiumEnabled = true;
     private static AppController mInstance;
     public BeaconManager beaconManager;
     int socketTimeout = 1000 * 5;               // 5 seconds
@@ -98,35 +87,6 @@ public class AppController extends MultiDexApplication implements BootstrapNotif
 
     public static synchronized AppController getInstance() {
         return mInstance;
-    }
-
-    public static void HandleRestoreSubscriptions(SubscriptionsListener listener) {
-        Purchases.getSharedInstance().restorePurchases(new ReceiveCustomerInfoCallback() {
-            @Override
-            public void onReceived(@NonNull CustomerInfo customerInfo) {
-                HandleCustomerInfo(customerInfo);
-                if (listener != null)
-                    listener.OnDone(IsPremiumEnabled);
-            }
-
-            @Override
-            public void onError(@NonNull PurchasesError purchasesError) {
-            }
-        });
-    }
-
-    private static void HandleCustomerInfo(@NonNull CustomerInfo customerInfo) {
-        customer = customerInfo;
-        EntitlementInfos entitlements = customerInfo.getEntitlements();
-
-        if (!BuildConfig.NEW_VERSION)
-            IsPremiumEnabled = true;
-        else {
-            EntitlementInfo premium = entitlements.get("premium");
-            if (premium != null && premium.isActive()) {
-                IsPremiumEnabled = true;
-            }
-        }
     }
 
     @Override
@@ -161,41 +121,6 @@ public class AppController extends MultiDexApplication implements BootstrapNotif
                 e.printStackTrace();
             }
         }
-
-        HandleSubscriptions();
-    }
-
-    public void HandleSubscriptions() {
-        Purchases.setDebugLogsEnabled(BuildConfig.DEBUG);
-        String key = getString(R.string.revenuecat_apikey);
-
-        Purchases.configure(new PurchasesConfiguration.Builder(this, key).build());
-        Purchases.getSharedInstance().getOfferings(new ReceiveOfferingsCallback() {
-            @Override
-            public void onReceived(@NonNull Offerings offerings) {
-                if (offerings.getCurrent() != null) {
-                    List<com.revenuecat.purchases.Package> availablePackages = offerings.getCurrent().getAvailablePackages();
-                    if (availablePackages.size() > 0) {
-                        premiumPackage = availablePackages.get(0);
-                    }
-                }
-            }
-
-            @Override
-            public void onError(@NonNull PurchasesError purchasesError) {
-            }
-        });
-
-        Purchases.getSharedInstance().getCustomerInfo(new ReceiveCustomerInfoCallback() {
-            @Override
-            public void onReceived(@NonNull CustomerInfo customerInfo) {
-                HandleCustomerInfo(customerInfo);
-            }
-
-            @Override
-            public void onError(@NonNull PurchasesError purchasesError) {
-            }
-        });
     }
 
     public void StopBeaconScanning() {

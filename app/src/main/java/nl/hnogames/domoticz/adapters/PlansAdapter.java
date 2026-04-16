@@ -12,21 +12,12 @@ import android.widget.TextView;
 
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.gms.ads.AdListener;
-import com.google.android.gms.ads.AdLoader;
-import com.google.android.gms.ads.AdRequest;
-import com.google.android.gms.ads.LoadAdError;
-import com.google.android.gms.ads.MobileAds;
-import com.google.android.gms.ads.RequestConfiguration;
-import com.google.android.gms.ads.nativead.NativeAdOptions;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import nl.hnogames.domoticz.MainActivity;
 import nl.hnogames.domoticz.R;
-import nl.hnogames.domoticz.ads.NativeTemplateStyle;
 import nl.hnogames.domoticz.ads.TemplateView;
 import nl.hnogames.domoticz.helpers.ItemMoveAdapter;
 import nl.hnogames.domoticz.utils.SharedPrefUtil;
@@ -39,7 +30,6 @@ public class PlansAdapter extends RecyclerView.Adapter<PlansAdapter.DataObjectHo
     private final Context mContext;
     private final SharedPrefUtil mSharedPrefs;
     private ArrayList<PlanInfo> mDataset;
-    private boolean adLoaded = false;
 
     public PlansAdapter(ArrayList<PlanInfo> data, Context mContext) {
         super();
@@ -126,7 +116,6 @@ public class PlansAdapter extends RecyclerView.Adapter<PlansAdapter.DataObjectHo
                     holder.iconRow.setVisibility(View.GONE);
                     holder.name.setVisibility(View.GONE);
                     holder.devices.setVisibility(View.GONE);
-                    setAdsLayout(holder);
                 } else {
                     holder.itemView.setVisibility(View.VISIBLE);
                     holder.contentWrapper.setVisibility(View.VISIBLE);
@@ -143,54 +132,6 @@ public class PlansAdapter extends RecyclerView.Adapter<PlansAdapter.DataObjectHo
                 }
             }
         } catch (Exception ex) {
-        }
-    }
-
-    /**
-     * Set the data for the ads row
-     *
-     * @param holder Holder to use
-     */
-    private void setAdsLayout(DataObjectHolder holder) {
-        try {
-            if (holder.adview == null)
-                return;
-            if (!adLoaded)
-                holder.adview.setVisibility(View.GONE);
-
-            List<String> testDevices = new ArrayList<>();
-            testDevices.add(AdRequest.DEVICE_ID_EMULATOR);
-            testDevices.add("0095CAF9DD12F33E5417335E1EC5FCAD");
-            RequestConfiguration requestConfiguration
-                    = new RequestConfiguration.Builder()
-                    .setTestDeviceIds(testDevices)
-                    .build();
-
-            MobileAds.initialize(mContext);
-            AdRequest adRequest = new AdRequest.Builder()
-                    .build();
-
-            AdLoader adLoader = new AdLoader.Builder(mContext, mContext.getString(R.string.ad_unit_id))
-                    .forNativeAd(unifiedNativeAd -> {
-                        NativeTemplateStyle styles = new NativeTemplateStyle.Builder().build();
-                        if (holder.adview != null) {
-                            holder.adview.setStyles(styles);
-                            holder.adview.setNativeAd(unifiedNativeAd);
-                            holder.adview.setVisibility(View.VISIBLE);
-                            adLoaded = true;
-                        }
-                    })
-                    .withAdListener(new AdListener() {
-                        @Override
-                        public void onAdFailedToLoad(LoadAdError errorCode) {
-                            if (holder.adview != null)
-                                holder.adview.setVisibility(View.GONE);
-                        }
-                    })
-                    .withNativeAdOptions(new NativeAdOptions.Builder().build())
-                    .build();
-            adLoader.loadAd(adRequest);
-        } catch (Exception ignored) {
         }
     }
 

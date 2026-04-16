@@ -17,13 +17,6 @@ import android.widget.TextView;
 
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.gms.ads.AdListener;
-import com.google.android.gms.ads.AdLoader;
-import com.google.android.gms.ads.AdRequest;
-import com.google.android.gms.ads.LoadAdError;
-import com.google.android.gms.ads.MobileAds;
-import com.google.android.gms.ads.RequestConfiguration;
-import com.google.android.gms.ads.nativead.NativeAdOptions;
 import com.google.android.material.chip.Chip;
 import com.like.LikeButton;
 import com.like.OnLikeListener;
@@ -35,7 +28,6 @@ import java.util.List;
 
 import nl.hnogames.domoticz.MainActivity;
 import nl.hnogames.domoticz.R;
-import nl.hnogames.domoticz.ads.NativeTemplateStyle;
 import nl.hnogames.domoticz.ads.TemplateView;
 import nl.hnogames.domoticz.helpers.ItemMoveAdapter;
 import nl.hnogames.domoticz.interfaces.UtilityClickListener;
@@ -57,7 +49,6 @@ public class UtilityAdapter extends RecyclerView.Adapter<UtilityAdapter.DataObje
     private final SharedPrefUtil mSharedPrefs;
     public ArrayList<UtilitiesInfo> filteredData = null;
     private ArrayList<UtilitiesInfo> data = null;
-    private boolean adLoaded = false;
 
     public UtilityAdapter(Context context,
                           Domoticz mDomoticz,
@@ -137,7 +128,6 @@ public class UtilityAdapter extends RecyclerView.Adapter<UtilityAdapter.DataObje
 
             if (mUtilitiesInfo.getIdx() == MainActivity.ADS_IDX) {
                 setButtons(holder, Buttons.ADS);
-                setAdsLayout(holder);
             } else {
                 if ((mUtilitiesInfo.getType() != null && DomoticzValues.Device.Utility.Type.THERMOSTAT.equalsIgnoreCase(mUtilitiesInfo.getType())) ||
                         (mUtilitiesInfo.getSubType() != null && DomoticzValues.Device.Utility.SubType.SETPOINT.equalsIgnoreCase(mUtilitiesInfo.getSubType())) ||
@@ -163,54 +153,6 @@ public class UtilityAdapter extends RecyclerView.Adapter<UtilityAdapter.DataObje
 
             holder.infoIcon.setTag(mUtilitiesInfo.getIdx());
             holder.infoIcon.setOnClickListener(v -> listener.onItemLongClicked((int) v.getTag()));
-        }
-    }
-
-    /**
-     * Set the data for the ads row
-     *
-     * @param holder Holder to use
-     */
-    private void setAdsLayout(DataObjectHolder holder) {
-        try {
-            if (holder.adview == null)
-                return;
-            if (!adLoaded)
-                holder.adview.setVisibility(View.GONE);
-
-            List<String> testDevices = new ArrayList<>();
-            testDevices.add(AdRequest.DEVICE_ID_EMULATOR);
-            testDevices.add("0095CAF9DD12F33E5417335E1EC5FCAD");
-            RequestConfiguration requestConfiguration
-                    = new RequestConfiguration.Builder()
-                    .setTestDeviceIds(testDevices)
-                    .build();
-
-            MobileAds.initialize(context);
-            AdRequest adRequest = new AdRequest.Builder()
-                    .build();
-
-            AdLoader adLoader = new AdLoader.Builder(context, context.getString(R.string.ad_unit_id))
-                    .forNativeAd(unifiedNativeAd -> {
-                        NativeTemplateStyle styles = new NativeTemplateStyle.Builder().build();
-                        if (holder.adview != null) {
-                            holder.adview.setStyles(styles);
-                            holder.adview.setNativeAd(unifiedNativeAd);
-                            holder.adview.setVisibility(View.VISIBLE);
-                            adLoaded = true;
-                        }
-                    })
-                    .withAdListener(new AdListener() {
-                        @Override
-                        public void onAdFailedToLoad(LoadAdError errorCode) {
-                            if (holder.adview != null)
-                                holder.adview.setVisibility(View.GONE);
-                        }
-                    })
-                    .withNativeAdOptions(new NativeAdOptions.Builder().build())
-                    .build();
-            adLoader.loadAd(adRequest);
-        } catch (Exception ignored) {
         }
     }
 

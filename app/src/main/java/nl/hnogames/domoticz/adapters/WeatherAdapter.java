@@ -18,13 +18,6 @@ import android.widget.TextView;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.gms.ads.AdListener;
-import com.google.android.gms.ads.AdLoader;
-import com.google.android.gms.ads.AdRequest;
-import com.google.android.gms.ads.LoadAdError;
-import com.google.android.gms.ads.MobileAds;
-import com.google.android.gms.ads.RequestConfiguration;
-import com.google.android.gms.ads.nativead.NativeAdOptions;
 import com.google.android.material.chip.Chip;
 import com.like.LikeButton;
 import com.like.OnLikeListener;
@@ -40,7 +33,6 @@ import az.plainpie.PieView;
 import az.plainpie.animation.PieAngleAnimation;
 import nl.hnogames.domoticz.MainActivity;
 import nl.hnogames.domoticz.R;
-import nl.hnogames.domoticz.ads.NativeTemplateStyle;
 import nl.hnogames.domoticz.ads.TemplateView;
 import nl.hnogames.domoticz.helpers.ItemMoveAdapter;
 import nl.hnogames.domoticz.interfaces.WeatherClickListener;
@@ -68,7 +60,6 @@ public class WeatherAdapter extends RecyclerView.Adapter<WeatherAdapter.DataObje
     private final SharedPrefUtil mSharedPrefs;
     public ArrayList<WeatherInfo> filteredData = null;
     private ArrayList<WeatherInfo> data = null;
-    private boolean adLoaded = false;
 
     public WeatherAdapter(Context context,
                           Domoticz mDomoticz,
@@ -163,54 +154,6 @@ public class WeatherAdapter extends RecyclerView.Adapter<WeatherAdapter.DataObje
         remove(position);
     }
 
-    /**
-     * Set the data for the ads row
-     *
-     * @param holder Holder to use
-     */
-    private void setAdsLayout(DataObjectHolder holder) {
-        try {
-            if (holder.adview == null)
-                return;
-            if (!adLoaded)
-                holder.adview.setVisibility(View.GONE);
-
-            List<String> testDevices = new ArrayList<>();
-            testDevices.add(AdRequest.DEVICE_ID_EMULATOR);
-            testDevices.add("0095CAF9DD12F33E5417335E1EC5FCAD");
-            RequestConfiguration requestConfiguration
-                    = new RequestConfiguration.Builder()
-                    .setTestDeviceIds(testDevices)
-                    .build();
-
-            MobileAds.initialize(context);
-            AdRequest adRequest = new AdRequest.Builder()
-                    .build();
-
-            AdLoader adLoader = new AdLoader.Builder(context, context.getString(R.string.ad_unit_id))
-                    .forNativeAd(unifiedNativeAd -> {
-                        NativeTemplateStyle styles = new NativeTemplateStyle.Builder().build();
-                        if (holder.adview != null) {
-                            holder.adview.setStyles(styles);
-                            holder.adview.setNativeAd(unifiedNativeAd);
-                            holder.adview.setVisibility(View.VISIBLE);
-                            adLoaded = true;
-                        }
-                    })
-                    .withAdListener(new AdListener() {
-                        @Override
-                        public void onAdFailedToLoad(LoadAdError errorCode) {
-                            if (holder.adview != null)
-                                holder.adview.setVisibility(View.GONE);
-                        }
-                    })
-                    .withNativeAdOptions(new NativeAdOptions.Builder().build())
-                    .build();
-            adLoader.loadAd(adRequest);
-        } catch (Exception ignored) {
-        }
-    }
-
     @Override
     public void onBindViewHolder(final DataObjectHolder holder, final int position) {
         if (filteredData != null && filteredData.size() > 0) {
@@ -227,7 +170,6 @@ public class WeatherAdapter extends RecyclerView.Adapter<WeatherAdapter.DataObje
                     holder.contentWrapper.setVisibility(View.GONE);
                 if (holder.adview != null)
                     holder.adview.setVisibility(View.VISIBLE);
-                setAdsLayout(holder);
             } else {
                 JSONObject language = null;
                 Language languageObj = new SharedPrefUtil(context).getSavedLanguage();

@@ -76,12 +76,4 @@
             app:tint="?attr/floatingActionBarText" />
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
-    <com.google.android.gms.ads.AdView
-        android:id="@id/adView"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_gravity="center|bottom"
-        ads:adSize="BANNER"
-        ads:adUnitId="@string/ADMOB_ADS_KEY" />
 </RelativeLayout>

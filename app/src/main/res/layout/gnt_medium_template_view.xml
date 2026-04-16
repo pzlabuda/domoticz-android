@@ -2,12 +2,6 @@
 <merge xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <com.google.android.gms.ads.nativead.NativeAdView
-        android:id="@+id/native_ad_view"
-        android:layout_width="match_parent"
-        android:layout_height="350dp"
-        android:background="@drawable/gnt_outline_shape">
-
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/background"
             android:layout_width="match_parent"
@@ -19,17 +13,6 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent">
 
-            <com.google.android.gms.ads.formats.MediaView
-                android:id="@+id/media_view"
-                android:layout_width="match_parent"
-                android:layout_height="200dp"
-                android:layout_margin="@dimen/gnt_no_size"
-                android:layout_marginTop="@dimen/gnt_no_margin"
-                app:layout_constraintBottom_toTopOf="@id/middle"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:id="@+id/middle"
                 android:layout_width="match_parent"
@@ -38,7 +21,7 @@
                 app:layout_constraintBottom_toTopOf="@+id/body"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/media_view">
+                app:layout_constraintTop_toTopOf="parent">
 
                 <androidx.constraintlayout.widget.ConstraintLayout
 
@@ -211,5 +194,4 @@
                 app:layout_constraintTop_toBottomOf="@id/body" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
-    </com.google.android.gms.ads.nativead.NativeAdView>
 </merge>

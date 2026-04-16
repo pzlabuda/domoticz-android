@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
-    <uses-permission android:name="nl.hnogames.domoticz.premium.permission.MAPS_RECEIVE" />
+    <uses-permission android:name="${applicationId}.permission.MAPS_RECEIVE" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
@@ -71,7 +71,7 @@
         android:required="false" />
 
     <permission
-        android:name="nl.hnogames.domoticz.premium.permission.MAPS_RECEIVE"
+        android:name="${applicationId}.permission.MAPS_RECEIVE"
         android:protectionLevel="signature" />
 
     <application

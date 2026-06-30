@@ -6,10 +6,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkCapabilities;
 import android.net.NetworkInfo;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
+import android.os.Build;
 
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -21,8 +24,6 @@ import nl.hnogames.domoticzapi.Interfaces.WifiSSIDListener;
 public class PhoneConnectionUtil {
     private WifiManager wifiManager;
     private Context mContext;
-    private NetworkInfo networkWifiInfo;
-    private NetworkInfo networkCellInfo;
     private WifiSSIDListener listener;
     private BroadcastReceiver receiver;
     private AtomicBoolean unregistered;
@@ -32,9 +33,6 @@ public class PhoneConnectionUtil {
             return;
         this.mContext = mContext;
         wifiManager = (WifiManager) mContext.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-        ConnectivityManager connManager = (ConnectivityManager) mContext.getSystemService(Context.CONNECTIVITY_SERVICE);
-        networkWifiInfo = connManager != null ? connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI) : null;
-        networkCellInfo = connManager != null ? connManager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE) : null;
         this.listener = listener;
     }
 
@@ -43,9 +41,6 @@ public class PhoneConnectionUtil {
             return;
         this.mContext = mContext;
         wifiManager = (WifiManager) mContext.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-        ConnectivityManager connManager = (ConnectivityManager) mContext.getSystemService(Context.CONNECTIVITY_SERVICE);
-        networkWifiInfo = connManager != null ? connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI) : null;
-        networkCellInfo = connManager != null ? connManager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE) : null;
     }
 
     public void stopReceiver() {
@@ -99,19 +94,51 @@ public class PhoneConnectionUtil {
 
     @SuppressWarnings("unused")
     public boolean isCellConnected() {
-        return networkCellInfo.isConnected();
+        ConnectivityManager connectivityManager = getConnectivityManager();
+        if (connectivityManager == null) {
+            return false;
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            Network activeNetwork = connectivityManager.getActiveNetwork();
+            if (activeNetwork == null) {
+                return false;
+            }
+
+            NetworkCapabilities capabilities = connectivityManager.getNetworkCapabilities(activeNetwork);
+            return capabilities != null && capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR);
+        }
+
+        NetworkInfo networkCellInfo = connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
+        return networkCellInfo != null && networkCellInfo.isConnected();
     }
 
     public boolean isWifiConnected() {
-        return networkWifiInfo.isConnected();
+        ConnectivityManager connectivityManager = getConnectivityManager();
+        if (connectivityManager == null) {
+            return false;
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            Network activeNetwork = connectivityManager.getActiveNetwork();
+            if (activeNetwork == null) {
+                return false;
+            }
+
+            NetworkCapabilities capabilities = connectivityManager.getNetworkCapabilities(activeNetwork);
+            return capabilities != null && capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI);
+        }
+
+        NetworkInfo networkWifiInfo = connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+        return networkWifiInfo != null && networkWifiInfo.isConnected();
     }
 
     public String getCurrentSsid() {
         String ssid = null;
 
-        if (networkWifiInfo.isConnected()) {
+        if (isWifiConnected()) {
             final WifiInfo connectionInfo = wifiManager.getConnectionInfo();
-            if (connectionInfo != null && !connectionInfo.getSSID().isEmpty()) {
+            if (connectionInfo != null && connectionInfo.getSSID() != null && !connectionInfo.getSSID().isEmpty()) {
                 ssid = connectionInfo.getSSID();
             }
         }
@@ -119,13 +146,27 @@ public class PhoneConnectionUtil {
     }
 
     public boolean isNetworkAvailable() {
-        try {
-            ConnectivityManager connectivityManager
-                    = (ConnectivityManager) mContext.getSystemService(Context.CONNECTIVITY_SERVICE);
-            NetworkInfo activeNetworkInfo = connectivityManager != null ? connectivityManager.getActiveNetworkInfo() : null;
-            return activeNetworkInfo != null && activeNetworkInfo.isConnected();
-        } catch (Exception ex) {
+        ConnectivityManager connectivityManager = getConnectivityManager();
+        if (connectivityManager == null) {
             return false;
         }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            Network activeNetwork = connectivityManager.getActiveNetwork();
+            if (activeNetwork == null) {
+                return false;
+            }
+            NetworkCapabilities capabilities = connectivityManager.getNetworkCapabilities(activeNetwork);
+            return capabilities != null
+                    && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                    && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED);
+        }
+
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+    }
+
+    private ConnectivityManager getConnectivityManager() {
+        return (ConnectivityManager) mContext.getSystemService(Context.CONNECTIVITY_SERVICE);
     }
 }

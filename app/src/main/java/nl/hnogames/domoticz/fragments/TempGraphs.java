@@ -2,6 +2,7 @@
 package nl.hnogames.domoticz.fragments;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Context;
 import android.content.res.Resources;
 import android.os.Bundle;
@@ -119,6 +120,9 @@ public class TempGraphs extends Fragment implements DomoticzFragmentListener {
 
     public void GetTypes() {
         try {
+            if (!canShowDialog()) {
+                return;
+            }
             if (selectedFilters == null) {
                 selectedFilters = new Integer[1];
                 selectedFilters[0] = 0;
@@ -163,6 +167,9 @@ public class TempGraphs extends Fragment implements DomoticzFragmentListener {
             @Override
             public void onReceiveTemperatures(ArrayList<TemperatureInfo> mTemperatureInfos) {
                 mTempInfos = mTemperatureInfos;
+                if (!canShowDialog() || mTempInfos == null || mTempInfos.isEmpty()) {
+                    return;
+                }
                 String[] items = new String[mTempInfos.size()];
                 for (int i = 0; i < mTempInfos.size(); i++)
                     items[i] = mTempInfos.get(i).getName();
@@ -243,6 +250,14 @@ public class TempGraphs extends Fragment implements DomoticzFragmentListener {
 
         xAxis.setLabelRotationAngle(90);
         xAxis.setLabelCount(15);
+    }
+
+    private boolean canShowDialog() {
+        if (!isAdded()) {
+            return false;
+        }
+        Activity activity = getActivity();
+        return activity != null && !activity.isFinishing() && !activity.isDestroyed();
     }
 
     public void LoadData() {

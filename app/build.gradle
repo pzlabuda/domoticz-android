@@ -181,7 +181,7 @@ dependencies {
     implementation "androidx.car.app:app:1.7.0"
     implementation 'org.reactivestreams:reactive-streams:1.0.4'
     implementation 'io.reactivex.rxjava2:rxjava:2.2.21'
-    implementation 'com.revenuecat.purchases:purchases:10.7.0'
+    implementation 'com.revenuecat.purchases:purchases:10.11.0'
 
     implementation 'androidx.room:room-runtime:2.8.4'
     annotationProcessor 'androidx.room:room-compiler:2.8.4'
@@ -190,7 +190,7 @@ dependencies {
     implementation 'com.google.firebase:firebase-iid:21.1.0'
     implementation 'com.google.firebase:firebase-analytics:23.2.0'
     implementation 'com.google.firebase:firebase-crashlytics:20.0.6'
-    implementation "com.google.firebase:firebase-messaging:25.0.2"
+    implementation "com.google.firebase:firebase-messaging:25.1.0"
     implementation "com.google.firebase:firebase-ads:23.6.0"
 
     implementation "com.google.android.gms:play-services-analytics:18.1.1"

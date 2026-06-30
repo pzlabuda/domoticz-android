@@ -359,11 +359,18 @@ public class Temperature extends DomoticzRecyclerFragment implements DomoticzFra
     @Override
 
     public boolean onItemLongClicked(int idx) {
-        showInfoDialog(getTemperature(idx));
+        TemperatureInfo temperatureInfo = getTemperature(idx);
+        if (temperatureInfo != null) {
+            showInfoDialog(temperatureInfo);
+        }
         return true;
     }
 
     private TemperatureInfo getTemperature(int idx) {
+        if (mTempInfos == null || mTempInfos.isEmpty()) {
+            return null;
+        }
+
         TemperatureInfo clickedTemp = null;
         for (TemperatureInfo mTempInfo : mTempInfos) {
             if (mTempInfo.getIdx() == idx) {
@@ -377,6 +384,7 @@ public class Temperature extends DomoticzRecyclerFragment implements DomoticzFra
         SerializableManager.readSerializedObject(mContext, "Temperatures", new TypeToken<ArrayList<TemperatureInfo>>() {
         }.getType(), (SerializableManager.JsonCacheCallback<ArrayList<TemperatureInfo>>) mTemperatureInfos -> {
             if (mTemperatureInfos != null) {
+                mTempInfos = mTemperatureInfos;
                 createListView(mTemperatureInfos);
             }
 

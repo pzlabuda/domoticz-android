@@ -126,6 +126,21 @@ public class SwitchesAdapter extends RecyclerView.Adapter<SwitchesAdapter.DataOb
         this.filteredData = sortedData;
     }
 
+    private void configureDimmerSlider(Slider dimmer, DevicesInfo deviceInfo) {
+        int maxDimLevel = deviceInfo.getMaxDimLevel() <= 0 ? 100 : deviceInfo.getMaxDimLevel();
+        int level = deviceInfo.getLevel();
+        if (level < 0) {
+            level = 0;
+        } else if (level > maxDimLevel) {
+            level = maxDimLevel;
+        }
+
+        dimmer.setTag(deviceInfo);
+        dimmer.setValueFrom(0f);
+        dimmer.setValueTo(maxDimLevel);
+        dimmer.setValue(level);
+    }
+
     private ArrayList<DevicesInfo> SortData(ArrayList<DevicesInfo> data) {
         ArrayList<DevicesInfo> customdata = new ArrayList<>();
         if (mSharedPrefs.enableCustomSorting() && mCustomSorting != null) {
@@ -1018,9 +1033,7 @@ public class SwitchesAdapter extends RecyclerView.Adapter<SwitchesAdapter.DataOb
         });
 
         if (holder.dimmer.getVisibility() == View.VISIBLE) {
-            holder.dimmer.setTag(mDeviceInfo);
-            holder.dimmer.setValueTo(mDeviceInfo.getMaxDimLevel() <= 0 ? 100 : mDeviceInfo.getMaxDimLevel());
-            holder.dimmer.setValue(mDeviceInfo.getLevel() > holder.dimmer.getValueTo() ? holder.dimmer.getValueTo() : mDeviceInfo.getLevel());
+            configureDimmerSlider(holder.dimmer, mDeviceInfo);
             holder.dimmer.setLabelFormatter(value -> (Math.round(value)) + "%");
             holder.dimmer.addOnSliderTouchListener(new Slider.OnSliderTouchListener() {
                 @Override
@@ -1194,9 +1207,7 @@ public class SwitchesAdapter extends RecyclerView.Adapter<SwitchesAdapter.DataOb
                 holder.iconRow.setAlpha(1f);
         });
 
-        holder.dimmer.setTag(mDeviceInfo);
-        holder.dimmer.setValueTo(mDeviceInfo.getMaxDimLevel() <= 0 ? 100 : mDeviceInfo.getMaxDimLevel());
-        holder.dimmer.setValue(mDeviceInfo.getLevel() > holder.dimmer.getValueTo() ? holder.dimmer.getValueTo() : mDeviceInfo.getLevel());
+        configureDimmerSlider(holder.dimmer, mDeviceInfo);
         holder.dimmer.setLabelFormatter(value -> (Math.round(value)) + "%");
         holder.dimmer.addOnSliderTouchListener(new Slider.OnSliderTouchListener() {
             @Override
@@ -1302,9 +1313,7 @@ public class SwitchesAdapter extends RecyclerView.Adapter<SwitchesAdapter.DataOb
             });
         }
 
-        holder.dimmer.setTag(mDeviceInfo);
-        holder.dimmer.setValueTo(mDeviceInfo.getMaxDimLevel() <= 0 ? 100 : mDeviceInfo.getMaxDimLevel());
-        holder.dimmer.setValue(mDeviceInfo.getLevel() > holder.dimmer.getValueTo() ? holder.dimmer.getValueTo() : mDeviceInfo.getLevel());
+        configureDimmerSlider(holder.dimmer, mDeviceInfo);
         holder.dimmer.setLabelFormatter(value -> (Math.round(value)) + "%");
         holder.dimmer.addOnSliderTouchListener(new Slider.OnSliderTouchListener() {
             @Override

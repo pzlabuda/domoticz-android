@@ -33,6 +33,10 @@ public class PlanActivity extends AppCompatAssistActivity {
 
     private void setupAutoRefresh() {
         if (mSharedPrefs.getAutoRefresh() && autoRefreshTimer == null) {
+            long refreshPeriodMs = mSharedPrefs.getAutoRefreshTimer() * 1000L;
+            if (refreshPeriodMs <= 0L) {
+                refreshPeriodMs = 5000L;
+            }
             autoRefreshTimer = new Timer("autorefresh", true);
             autoRefreshTimer.scheduleAtFixedRate(new TimerTask() {
                 @Override
@@ -45,7 +49,7 @@ public class PlanActivity extends AppCompatAssistActivity {
                         }
                     });
                 }
-            }, 0, (mSharedPrefs.getAutoRefreshTimer() * 1000L));
+            }, 0, refreshPeriodMs);
         }
     }
 

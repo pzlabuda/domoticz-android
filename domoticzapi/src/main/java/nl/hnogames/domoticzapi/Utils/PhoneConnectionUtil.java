@@ -157,9 +157,14 @@ public class PhoneConnectionUtil {
                 return false;
             }
             NetworkCapabilities capabilities = connectivityManager.getNetworkCapabilities(activeNetwork);
+            // Use transport-based check instead of NET_CAPABILITY_VALIDATED to avoid false
+            // negatives on Android 17+ where IPv6 validation failures can cause VALIDATED
+            // to not be set even though the network is fully functional for local (IPv4) access.
             return capabilities != null
-                    && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-                    && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED);
+                    && (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)
+                    || capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)
+                    || capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)
+                    || capabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN));
         }
 
         NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();

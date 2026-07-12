@@ -6,6 +6,7 @@ import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.wifi.ScanResult;
+import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -23,7 +24,6 @@ import com.fastaccess.permission.base.PermissionHelper;
 import com.ftinc.scoop.Scoop;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.switchmaterial.SwitchMaterial;
-import com.isupatches.wisefy.WiseFy;
 import com.nhaarman.listviewanimations.appearance.simple.SwingBottomInAnimationAdapter;
 
 import java.util.ArrayList;
@@ -50,7 +50,7 @@ public class WifiSettingsActivity extends AppCompatPermissionsActivity implement
     private SharedPrefUtil mSharedPrefs;
     private CoordinatorLayout coordinatorLayout;
     private ArrayList<WifiInfo> WifiList;
-    private WiseFy wisefy;
+    private WifiManager wifiManager;
     private PermissionHelper permissionHelper;
     private WifiAdapter adapter;
     private Toolbar toolbar;
@@ -77,7 +77,7 @@ public class WifiSettingsActivity extends AppCompatPermissionsActivity implement
 
         WifiList = mSharedPrefs.getWifiList();
         adapter = new WifiAdapter(this, WifiList, this);
-        wisefy = new WiseFy.Brains(this).getSmarts();
+        wifiManager = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
 
         notificationSwitch = findViewById(R.id.switch_notifications_button);
         notificationSwitch.setChecked(mSharedPrefs.isWifiNotificationsEnabled());
@@ -85,11 +85,8 @@ public class WifiSettingsActivity extends AppCompatPermissionsActivity implement
 
         createListView();
 
-        try {
-            if (!wisefy.isWifiEnabled()) {
-                UsefulBits.showSnackbar(WifiSettingsActivity.this, coordinatorLayout, R.string.wifi_turned_off, Snackbar.LENGTH_SHORT);
-            }
-        } catch (Exception ignored) {
+        if (wifiManager != null && !wifiManager.isWifiEnabled()) {
+            UsefulBits.showSnackbar(WifiSettingsActivity.this, coordinatorLayout, R.string.wifi_turned_off, Snackbar.LENGTH_SHORT);
         }
     }
 
@@ -97,14 +94,27 @@ public class WifiSettingsActivity extends AppCompatPermissionsActivity implement
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
             permissionHelper.request(PermissionsUtil.INITIAL_LOCATION_PERMS);
         else {
-            try {
-                List<ScanResult> nearbyAccessPoints = wisefy.getNearbyAccessPoints(true);
-                if (nearbyAccessPoints == null)
-                    return;
+            if (wifiManager == null) {
+                return;
+            }
+            if (!wifiManager.isWifiEnabled()) {
+                UsefulBits.showSnackbar(WifiSettingsActivity.this, coordinatorLayout, R.string.wifi_turned_off, Snackbar.LENGTH_SHORT);
+                return;
+            }
+            List<ScanResult> nearbyAccessPoints = wifiManager.getScanResults();
+            if (nearbyAccessPoints == null)
+                return;
 
                 final List<String> wifiDevices = new ArrayList<>();
-                for (ScanResult result : nearbyAccessPoints)
+                for (ScanResult result : nearbyAccessPoints) {
+                    if (result == null || result.SSID == null || result.SSID.isEmpty()) {
+                        continue;
+                    }
                     wifiDevices.add(result.SSID);
+                }
+                if (wifiDevices.isEmpty()) {
+                    return;
+                }
 
                 CharSequence[] items = wifiDevices.toArray(new CharSequence[wifiDevices.size()]);
                 new AlertDialog.Builder(this)
@@ -134,8 +144,6 @@ public class WifiSettingsActivity extends AppCompatPermissionsActivity implement
                             }
                         })
                         .show();
-            } catch (Exception ignored) {
-            }
         }
     }
 

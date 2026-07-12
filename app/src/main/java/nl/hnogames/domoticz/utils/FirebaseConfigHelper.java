@@ -17,6 +17,7 @@ import nl.hnogames.domoticz.app.AppController;
 
 public class FirebaseConfigHelper {
     private static final String TAG = "FirebaseConfigHelper";
+    private static final Object FIREBASE_INIT_LOCK = new Object();
 
     public interface TestCallback {
         void onSuccess(String token);
@@ -32,68 +33,50 @@ public class FirebaseConfigHelper {
             return false;
         }
 
-        try {
-            // Check if default Firebase app is already initialized
+        synchronized (FIREBASE_INIT_LOCK) {
             try {
+                // Default app already initialized in this process.
+                // Keep it alive to avoid repeated teardown/re-init races.
                 FirebaseApp defaultApp = FirebaseApp.getInstance();
                 if (defaultApp != null) {
-                    // Delete existing instance to reinitialize with new config
-                    defaultApp.delete();
-                    Log.d(TAG, "Deleted existing Firebase app for reinitialization");
+                    Log.d(TAG, "Firebase already initialized");
+                    return true;
                 }
             } catch (IllegalStateException e) {
-                // No existing app, which is fine
-                Log.d(TAG, "No existing Firebase app to delete");
+                Log.d(TAG, "No existing Firebase app, creating one");
             }
 
-            // Create Firebase options from user configuration
-            FirebaseOptions options = new FirebaseOptions.Builder()
-                    .setProjectId(prefs.getFcmProjectId())
-                    .setApplicationId(prefs.getFcmAppId())
-                    .setApiKey(prefs.getFcmApiKey())
-                    .setGcmSenderId(prefs.getFcmSenderId())
-                    .build();
+            try {
+                FirebaseOptions options = new FirebaseOptions.Builder()
+                        .setProjectId(prefs.getFcmProjectId())
+                        .setApplicationId(prefs.getFcmAppId())
+                        .setApiKey(prefs.getFcmApiKey())
+                        .setGcmSenderId(prefs.getFcmSenderId())
+                        .build();
 
-            // Initialize Firebase app as default instance
-            FirebaseApp.initializeApp(context, options);
-
-            Log.d(TAG, "Firebase initialized successfully with user configuration");
-
-            // Get FCM token
-            getFirebaseToken(context, new TestCallback() {
-                @Override
-                public void onSuccess(String token) {
-                    Log.d(TAG, "FCM Token retrieved: " + token);
-                    // Send token to server
-                    GCMUtils.sendRegistrationIdToBackend(context, token);
+                FirebaseApp app = FirebaseApp.initializeApp(context.getApplicationContext(), options);
+                if (app == null) {
+                    Log.e(TAG, "Firebase initialization returned null app");
+                    return false;
                 }
 
-                @Override
-                public void onError(String error) {
-                    Log.e(TAG, "Failed to retrieve FCM token: " + error);
-                }
-            });
+                Log.d(TAG, "Firebase initialized successfully with user configuration");
+                getFirebaseToken(context.getApplicationContext(), new TestCallback() {
+                    @Override
+                    public void onSuccess(String token) {
+                        GCMUtils.sendRegistrationIdToBackend(context.getApplicationContext(), token);
+                    }
 
-            return true;
-        } catch (Exception e) {
-            Log.e(TAG, "Firebase initialization failed", e);
-            return false;
-        }
-    }
-
-    /**
-     * Delete existing Firebase app instance
-     */
-    private static void deleteExistingFirebaseApp() {
-        try {
-            FirebaseApp app = FirebaseApp.getInstance();
-            if (app != null) {
-                app.delete();
-                Log.d(TAG, "Deleted existing Firebase app");
+                    @Override
+                    public void onError(String error) {
+                        Log.e(TAG, "Failed to retrieve FCM token after initialization: " + error);
+                    }
+                });
+                return true;
+            } catch (Exception e) {
+                Log.e(TAG, "Firebase initialization failed", e);
+                return false;
             }
-        } catch (IllegalStateException e) {
-            // App doesn't exist, which is fine
-            Log.d(TAG, "No existing Firebase app to delete");
         }
     }
 
@@ -161,7 +144,6 @@ public class FirebaseConfigHelper {
             return;
         }
 
-        // Try to initialize and get token
         boolean initialized = initializeFirebase(context, prefs);
         if (!initialized) {
             if (callback != null) {
@@ -170,7 +152,6 @@ public class FirebaseConfigHelper {
             return;
         }
 
-        // Get token to verify configuration works
         getFirebaseToken(context, callback);
     }
 

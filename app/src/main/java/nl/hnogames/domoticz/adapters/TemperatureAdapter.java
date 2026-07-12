@@ -288,34 +288,11 @@ public class TemperatureAdapter extends RecyclerView.Adapter<TemperatureAdapter.
                     }
                 });
 
-                holder.dayButton.setId(mTemperatureInfo.getIdx());
-                holder.dayButton.setOnClickListener(v -> {
+                holder.graphButton.setId(mTemperatureInfo.getIdx());
+                holder.graphButton.setOnClickListener(v -> {
                     for (TemperatureInfo t : filteredData) {
                         if (t.getIdx() == v.getId())
                             listener.onLogClick(t, DomoticzValues.Graph.Range.DAY);
-                    }
-                });
-                holder.monthButton.setId(mTemperatureInfo.getIdx());
-                holder.monthButton.setOnClickListener(v -> {
-                    for (TemperatureInfo t : filteredData) {
-                        if (t.getIdx() == v.getId())
-                            listener.onLogClick(t, DomoticzValues.Graph.Range.MONTH);
-                    }
-                });
-
-                holder.weekButton.setVisibility(View.GONE);
-                holder.weekButton.setId(mTemperatureInfo.getIdx());
-                holder.weekButton.setOnClickListener(v -> {
-                    for (TemperatureInfo t : filteredData) {
-                        if (t.getIdx() == v.getId())
-                            listener.onLogClick(t, DomoticzValues.Graph.Range.WEEK);
-                    }
-                });
-                holder.yearButton.setId(mTemperatureInfo.getIdx());
-                holder.yearButton.setOnClickListener(v -> {
-                    for (TemperatureInfo t : filteredData) {
-                        if (t.getIdx() == v.getId())
-                            listener.onLogClick(t, DomoticzValues.Graph.Range.YEAR);
                     }
                 });
 
@@ -457,10 +434,7 @@ public class TemperatureAdapter extends RecyclerView.Adapter<TemperatureAdapter.
         ImageView iconRow;
         ImageView iconMode;
         Button setButton;
-        Chip dayButton;
-        Chip monthButton;
-        Chip weekButton;
-        Chip yearButton;
+        Chip graphButton;
         Boolean isProtected;
         LikeButton likeButton;
         LinearLayout extraPanel;
@@ -481,10 +455,7 @@ public class TemperatureAdapter extends RecyclerView.Adapter<TemperatureAdapter.
             iconMode = itemView.findViewById(R.id.mode_icon);
             pieView = itemView.findViewById(R.id.pieView);
 
-            dayButton = itemView.findViewById(R.id.day_button);
-            monthButton = itemView.findViewById(R.id.month_button);
-            yearButton = itemView.findViewById(R.id.year_button);
-            weekButton = itemView.findViewById(R.id.week_button);
+            graphButton = itemView.findViewById(R.id.graph_button);
             setButton = itemView.findViewById(R.id.set_button);
             likeButton = itemView.findViewById(R.id.fav_button);
 

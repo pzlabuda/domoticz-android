@@ -307,36 +307,11 @@ public class WeatherAdapter extends RecyclerView.Adapter<WeatherAdapter.DataObje
                 if (!UsefulBits.isEmpty(mWeatherInfo.getHumidityStatus()))
                     holder.data.append(", " + context.getString(R.string.humidity) + ": " + mWeatherInfo.getHumidityStatus());
 
-                holder.dayButton.setId(mWeatherInfo.getIdx());
-                holder.dayButton.setOnClickListener(v -> {
+                holder.graphButton.setId(mWeatherInfo.getIdx());
+                holder.graphButton.setOnClickListener(v -> {
                     for (WeatherInfo t : filteredData) {
                         if (t.getIdx() == v.getId())
                             listener.onLogClick(t, DomoticzValues.Graph.Range.DAY);
-                    }
-                });
-
-                holder.monthButton.setId(mWeatherInfo.getIdx());
-                holder.monthButton.setOnClickListener(v -> {
-                    for (WeatherInfo t : filteredData) {
-                        if (t.getIdx() == v.getId())
-                            listener.onLogClick(t, DomoticzValues.Graph.Range.MONTH);
-                    }
-                });
-
-                holder.yearButton.setId(mWeatherInfo.getIdx());
-                holder.yearButton.setOnClickListener(v -> {
-                    for (WeatherInfo t : filteredData) {
-                        if (t.getIdx() == v.getId())
-                            listener.onLogClick(t, DomoticzValues.Graph.Range.YEAR);
-                    }
-                });
-
-                holder.weekButton.setVisibility(View.GONE);
-                holder.weekButton.setId(mWeatherInfo.getIdx());
-                holder.weekButton.setOnClickListener(v -> {
-                    for (WeatherInfo t : filteredData) {
-                        if (t.getIdx() == v.getId())
-                            listener.onLogClick(t, DomoticzValues.Graph.Range.WEEK);
                     }
                 });
 
@@ -417,10 +392,7 @@ public class WeatherAdapter extends RecyclerView.Adapter<WeatherAdapter.DataObje
         TextView hardware;
         ImageView iconRow;
         Boolean isProtected;
-        Chip dayButton;
-        Chip monthButton;
-        Chip yearButton;
-        Chip weekButton;
+        Chip graphButton;
         LikeButton likeButton;
         LinearLayout extraPanel;
         PieView pieView;
@@ -435,10 +407,7 @@ public class WeatherAdapter extends RecyclerView.Adapter<WeatherAdapter.DataObje
             pieView = itemView.findViewById(R.id.pieView);
             infoIcon = itemView.findViewById(R.id.widget_info_icon);
             pieView.setVisibility(View.GONE);
-            dayButton = itemView.findViewById(R.id.day_button);
-            monthButton = itemView.findViewById(R.id.month_button);
-            yearButton = itemView.findViewById(R.id.year_button);
-            weekButton = itemView.findViewById(R.id.week_button);
+            graphButton = itemView.findViewById(R.id.graph_button);
             likeButton = itemView.findViewById(R.id.fav_button);
             name = itemView.findViewById(R.id.weather_name);
             iconRow = itemView.findViewById(R.id.rowIcon);

@@ -47,7 +47,6 @@ import com.google.android.gms.analytics.Tracker;
 import com.google.android.material.appbar.CollapsingToolbarLayout;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
-import com.google.firebase.iid.FirebaseInstanceId;
 import com.mikepenz.google_material_typeface_library.GoogleMaterial;
 import com.mikepenz.materialdrawer.AccountHeader;
 import com.mikepenz.materialdrawer.AccountHeaderBuilder;
@@ -86,6 +85,7 @@ import nl.hnogames.domoticz.service.WifiReceiverManager;
 import nl.hnogames.domoticz.ui.PasswordDialog;
 import nl.hnogames.domoticz.ui.SortDialog;
 import nl.hnogames.domoticz.utils.GCMUtils;
+import nl.hnogames.domoticz.utils.FirebaseConfigHelper;
 import nl.hnogames.domoticz.utils.GeoUtils;
 import nl.hnogames.domoticz.utils.PermissionsUtil;
 import nl.hnogames.domoticz.utils.SerializableManager;
@@ -860,14 +860,37 @@ public class MainActivity extends AppCompatPermissionsActivity {
 
     private void setupAutoRefresh() {
         if (mSharedPrefs.getAutoRefresh() && autoRefreshTimer == null) {
+            long refreshPeriodMs = mSharedPrefs.getAutoRefreshTimer() * 1000L;
+            if (refreshPeriodMs <= 0L) {
+                refreshPeriodMs = 5000L;
+            }
             autoRefreshTimer = new Timer("autorefresh", true);
             autoRefreshTimer.scheduleAtFixedRate(new TimerTask() {
                 @Override
 
                 public void run() {
-                    runOnUiThread(() -> refreshFragment());
+                    runOnUiThread(() -> autoRefreshFragment());
                 }
-            }, 0, (mSharedPrefs.getAutoRefreshTimer() * 1000L));
+            }, 0, refreshPeriodMs);
+        }
+    }
+
+    private void autoRefreshFragment() {
+        Fragment f = latestFragment;
+        if (f instanceof DomoticzRecyclerFragment) {
+            ((DomoticzRecyclerFragment) f).isAutoRefresh = true;
+            ((DomoticzRecyclerFragment) f).refreshFragment();
+            ((DomoticzRecyclerFragment) f).isAutoRefresh = false;
+        } else if (f instanceof DomoticzCardFragment) {
+            ((DomoticzCardFragment) f).isAutoRefresh = true;
+            ((DomoticzCardFragment) f).refreshFragment();
+            ((DomoticzCardFragment) f).isAutoRefresh = false;
+        } else if (f instanceof DomoticzDashboardFragment) {
+            ((DomoticzDashboardFragment) f).isAutoRefresh = true;
+            ((DomoticzDashboardFragment) f).refreshFragment();
+            ((DomoticzDashboardFragment) f).isAutoRefresh = false;
+        } else if (f instanceof RefreshFragment) {
+            ((RefreshFragment) f).RefreshFragment();
         }
     }
 
@@ -882,32 +905,29 @@ public class MainActivity extends AppCompatPermissionsActivity {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             if (!PermissionsUtil.canAccessDeviceState(this))
                 permissionHelper.request(PermissionsUtil.INITIAL_DEVICE_PERMS);
-            else
+            else if (mSharedPrefs.hasFirebaseConfig())
                 GetFirebaseToken();
         }
     }
 
     private void GetFirebaseToken() {
-        try {
-            FirebaseInstanceId.getInstance().getInstanceId()
-                    .addOnFailureListener(e -> Log.w(TAG, "getInstanceId failed", e))
-                    .addOnCompleteListener(task -> {
-                        try {
-                            if (!task.isSuccessful() && task.getResult() == null) {
-                                Log.w(TAG, "getInstanceId failed", task.getException());
-                                return;
-                            }
-
-                            String refreshedToken = task.getResult().getToken();
-                            Log.d("Firebase id login", "Refreshed token: " + refreshedToken);
-                            GCMUtils.sendRegistrationIdToBackend(MainActivity.this, refreshedToken);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    });
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (!FirebaseConfigHelper.initializeFirebase(this, mSharedPrefs)) {
+            Log.w(TAG, "Firebase is not initialized; skipping token refresh");
+            return;
         }
+
+        FirebaseConfigHelper.getFirebaseToken(this, new FirebaseConfigHelper.TestCallback() {
+            @Override
+            public void onSuccess(String token) {
+                Log.d("Firebase id login", "Refreshed token: " + token);
+                GCMUtils.sendRegistrationIdToBackend(MainActivity.this, token);
+            }
+
+            @Override
+            public void onError(String error) {
+                Log.w(TAG, "getFirebaseToken failed: " + error);
+            }
+        });
     }
 
     private void appRate() {

@@ -517,6 +517,13 @@
 
     <style name="DialogButton" parent="Widget.MaterialComponents.Button.TextButton.Dialog" />
 
+    <!-- Custom filter chip that uses the app's colorAccent for the checked indicator and stroke -->
+    <style name="AppTheme.FilterChip" parent="Widget.MaterialComponents.Chip.Filter">
+        <item name="checkedIconTint">?attr/colorAccent</item>
+        <item name="chipStrokeColor">?attr/colorAccent</item>
+        <item name="chipStrokeWidth">1dp</item>
+    </style>
+
     <!-- Snackbar styles -->
     <style name="snackbarStyle" parent="@style/Widget.MaterialComponents.Snackbar">
         <item name="android:layout_margin">16dp</item>

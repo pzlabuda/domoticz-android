@@ -16,6 +16,7 @@ import com.google.android.material.snackbar.Snackbar;
 import com.google.common.reflect.TypeToken;
 
 import java.util.ArrayList;
+import java.util.Locale;
 
 import nl.hnogames.domoticz.GraphActivity;
 import nl.hnogames.domoticz.MainActivity;
@@ -62,8 +63,7 @@ public class Temperature extends DomoticzRecyclerFragment implements DomoticzFra
 
     @Override
     public void refreshFragment() {
-        if (mSwipeRefreshLayout != null)
-            mSwipeRefreshLayout.setRefreshing(true);
+        startSwipeRefreshing();
         processTemperature();
     }
 
@@ -154,8 +154,7 @@ public class Temperature extends DomoticzRecyclerFragment implements DomoticzFra
 
     private void processTemperature() {
         try {
-            if (mSwipeRefreshLayout != null)
-                mSwipeRefreshLayout.setRefreshing(true);
+            startSwipeRefreshing();
 
             GetTemperatures();
         } catch (Exception ex) {
@@ -270,6 +269,7 @@ public class Temperature extends DomoticzRecyclerFragment implements DomoticzFra
         intent.putExtra("IDX", temp.getIdx());
         intent.putExtra("RANGE", range);
         intent.putExtra("TYPE", "temp");
+        intent.putExtra("TITLE", temp.getName().toUpperCase(Locale.getDefault()));
         intent.putExtra("STEPS", 3);
         startActivity(intent);
     }
@@ -361,11 +361,18 @@ public class Temperature extends DomoticzRecyclerFragment implements DomoticzFra
     @Override
 
     public boolean onItemLongClicked(int idx) {
-        showInfoDialog(getTemperature(idx));
+        TemperatureInfo temperatureInfo = getTemperature(idx);
+        if (temperatureInfo != null) {
+            showInfoDialog(temperatureInfo);
+        }
         return true;
     }
 
     private TemperatureInfo getTemperature(int idx) {
+        if (mTempInfos == null || mTempInfos.isEmpty()) {
+            return null;
+        }
+
         TemperatureInfo clickedTemp = null;
         for (TemperatureInfo mTempInfo : mTempInfos) {
             if (mTempInfo.getIdx() == idx) {
@@ -379,6 +386,7 @@ public class Temperature extends DomoticzRecyclerFragment implements DomoticzFra
         SerializableManager.readSerializedObject(mContext, "Temperatures", new TypeToken<ArrayList<TemperatureInfo>>() {
         }.getType(), (SerializableManager.JsonCacheCallback<ArrayList<TemperatureInfo>>) mTemperatureInfos -> {
             if (mTemperatureInfos != null) {
+                mTempInfos = mTemperatureInfos;
                 createListView(mTemperatureInfos);
             }
 

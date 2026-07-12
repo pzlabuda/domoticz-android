@@ -142,12 +142,10 @@ public class Domoticz {
                 Set<String> localSsid = getServerUtil().getActiveServer().getLocalServerSsid();
 
                 if (mPhoneConnectionUtil.isWifiConnected() && localSsid != null && localSsid.size() > 0) {
-                    String currentSsid = mPhoneConnectionUtil.getCurrentSsid();
+                    String currentSsid = normalizeSsid(mPhoneConnectionUtil.getCurrentSsid());
                     if (!UsefulBits.isEmpty(currentSsid)) {
-                        // Remove quotes from current SSID read out
-                        currentSsid = currentSsid.substring(1, currentSsid.length() - 1);
                         for (String ssid : localSsid) {
-                            if (ssid.equals(currentSsid)) {
+                            if (normalizeSsid(ssid).equals(currentSsid)) {
                                 userIsLocal = true;
                                 break;
                             }
@@ -176,6 +174,25 @@ public class Domoticz {
             }
         }
         return result;
+    }
+
+    private String normalizeSsid(String ssid) {
+        if (UsefulBits.isEmpty(ssid)) {
+            return "";
+        }
+
+        String normalizedSsid = ssid.trim();
+        if (normalizedSsid.length() > 1
+                && normalizedSsid.startsWith("\"")
+                && normalizedSsid.endsWith("\"")) {
+            normalizedSsid = normalizedSsid.substring(1, normalizedSsid.length() - 1);
+        }
+
+        if ("<unknown ssid>".equalsIgnoreCase(normalizedSsid)) {
+            return "";
+        }
+
+        return normalizedSsid;
     }
 
     public String isConnectionDataComplete(ServerInfo server, boolean validatePorts) {
@@ -895,6 +912,16 @@ public class Domoticz {
         String url = mDomoticzUrls.constructGetUrl(DomoticzValues.Json.Url.Request.GRAPH) + idx;
         url += DomoticzValues.Url.Log.GRAPH_RANGE + range;
         url += DomoticzValues.Url.Log.GRAPH_TYPE + type;
+        Log.i("GRAPH", "url: " + url);
+        GetResultRequest(parser, url, true);
+    }
+
+    public void getGraphDataForDate(int idx, String range, String type, String date, GraphDataReceiver receiver) {
+        GraphDataParser parser = new GraphDataParser(receiver);
+        String url = mDomoticzUrls.constructGetUrl(DomoticzValues.Json.Url.Request.GRAPH) + idx;
+        url += DomoticzValues.Url.Log.GRAPH_RANGE + range;
+        url += DomoticzValues.Url.Log.GRAPH_TYPE + type;
+        url += "&date=" + date;
         Log.i("GRAPH", "url: " + url);
         GetResultRequest(parser, url, true);
     }

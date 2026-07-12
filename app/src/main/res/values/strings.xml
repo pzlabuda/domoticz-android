@@ -47,6 +47,14 @@
     <string name="button_status_week">Week</string>
     <string name="button_status_month">Month</string>
     <string name="button_status_year">Year</string>
+    <string name="button_status_graph">Graph</string>
+    <string name="no_data_for_range">No data available for this range</string>
+    <string name="set_threshold">Set threshold</string>
+    <string name="clear_threshold">Clear threshold</string>
+    <string name="action_share">Share</string>
+    <string name="compare_previous">Compare prev.</string>
+    <string name="threshold_hint">Enter threshold value (0 to clear)</string>
+    <string name="threshold_label">Threshold</string>
     <string name="button_status_timer">Timer</string>
     <string name="button_status_notifications">Notifications</string>
     <string name="button_color">Color</string>

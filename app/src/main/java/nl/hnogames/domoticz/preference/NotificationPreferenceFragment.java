@@ -20,7 +20,6 @@ import androidx.preference.PreferenceGroup;
 
 import com.fastaccess.permission.base.PermissionHelper;
 import com.google.android.material.snackbar.Snackbar;
-import com.google.firebase.iid.FirebaseInstanceId;
 
 import java.util.List;
 
@@ -28,6 +27,7 @@ import nl.hnogames.domoticz.NotificationHistoryActivity;
 import nl.hnogames.domoticz.R;
 import nl.hnogames.domoticz.helpers.StaticHelper;
 import nl.hnogames.domoticz.utils.DeviceUtils;
+import nl.hnogames.domoticz.utils.FirebaseConfigHelper;
 import nl.hnogames.domoticz.utils.NotificationUtil;
 import nl.hnogames.domoticz.utils.PermissionsUtil;
 import nl.hnogames.domoticz.utils.SharedPrefUtil;
@@ -175,42 +175,57 @@ public class NotificationPreferenceFragment extends PreferenceFragmentCompat {
 
     private void pushGCMRegistrationIds() {
         final String UUID = DeviceUtils.getUniqueID(mContext);
-        final String senderId = FirebaseInstanceId.getInstance().getToken();
-        StaticHelper.getDomoticz(mContext).CleanMobileDevice(UUID, new MobileDeviceReceiver() {
+        if (!mSharedPrefs.hasFirebaseConfig()) {
+            showSnack(mContext.getString(R.string.firebase_config_not_configured));
+            return;
+        }
+
+        if (!FirebaseConfigHelper.initializeFirebase(mContext, mSharedPrefs)) {
+            showSnack(mContext.getString(R.string.notification_settings_push_failed));
+            return;
+        }
+
+        FirebaseConfigHelper.getFirebaseToken(mContext, new FirebaseConfigHelper.TestCallback() {
+            @Override
+            public void onSuccess(String token) {
+                pushTokenToDomoticz(UUID, token);
+            }
+
+            @Override
+            public void onError(String error) {
+                if (isAdded()) {
+                    showSnack(mContext.getString(R.string.notification_settings_push_failed));
+                }
+            }
+        });
+    }
+
+    private void pushTokenToDomoticz(final String uuid, final String token) {
+        StaticHelper.getDomoticz(mContext).CleanMobileDevice(uuid, new MobileDeviceReceiver() {
             @Override
             public void onSuccess() {
-                //previous id cleaned
-                StaticHelper.getDomoticz(mContext).AddMobileDevice(UUID, senderId, new MobileDeviceReceiver() {
-                    @Override
-                    public void onSuccess() {
-                        if (isAdded())
-                            showSnack(mContext.getString(R.string.notification_settings_pushed));
-                    }
-
-                    @Override
-                    public void onError(Exception error) {
-                        if (isAdded())
-                            showSnack(mContext.getString(R.string.notification_settings_push_failed));
-                    }
-                });
+                addMobileDevice(uuid, token);
             }
 
             @Override
             public void onError(Exception error) {
-                //nothing to clean..
-                StaticHelper.getDomoticz(mContext).AddMobileDevice(UUID, senderId, new MobileDeviceReceiver() {
-                    @Override
-                    public void onSuccess() {
-                        if (isAdded())
-                            showSnack(mContext.getString(R.string.notification_settings_pushed));
-                    }
+                addMobileDevice(uuid, token);
+            }
+        });
+    }
 
-                    @Override
-                    public void onError(Exception error) {
-                        if (isAdded())
-                            showSnack(mContext.getString(R.string.notification_settings_push_failed));
-                    }
-                });
+    private void addMobileDevice(final String uuid, final String token) {
+        StaticHelper.getDomoticz(mContext).AddMobileDevice(uuid, token, new MobileDeviceReceiver() {
+            @Override
+            public void onSuccess() {
+                if (isAdded())
+                    showSnack(mContext.getString(R.string.notification_settings_pushed));
+            }
+
+            @Override
+            public void onError(Exception error) {
+                if (isAdded())
+                    showSnack(mContext.getString(R.string.notification_settings_push_failed));
             }
         });
     }

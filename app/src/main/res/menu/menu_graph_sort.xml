@@ -11,4 +11,19 @@
         android:title="@string/action_filter"
         app:showAsAction="always" />
 
+    <!--
+    <item
+        android:id="@+id/action_threshold"
+        android:orderInCategory="200"
+        android:title="@string/set_threshold"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_share"
+        android:icon="@drawable/baseline_share_white_24"
+        android:orderInCategory="300"
+        android:title="@string/action_share"
+        app:showAsAction="never" />
+-->
+
 </menu>

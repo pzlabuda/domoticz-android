@@ -222,7 +222,7 @@ public class SharedPrefUtil {
     public int getAutoRefreshTimer() {
         try {
             int value = Integer.valueOf(prefs.getString(PREF_AUTO_REFRESH_TIMER, "5"));
-            if (value == -1) {
+            if (value <= 0) {
                 editor.putString(PREF_AUTO_REFRESH_TIMER, "5").apply();
                 return 5;
             }

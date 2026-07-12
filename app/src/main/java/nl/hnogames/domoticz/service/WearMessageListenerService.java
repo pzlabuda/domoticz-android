@@ -102,6 +102,10 @@ public class WearMessageListenerService extends WearableListenerService implemen
                         case DomoticzValues.Device.Type.Value.DIMMER:
                         case DomoticzValues.Device.Type.Value.BLINDS:
                         case DomoticzValues.Device.Type.Value.BLINDPERCENTAGE:
+                        case DomoticzValues.Device.Type.Value.BLINDVENETIAN:
+                        case DomoticzValues.Device.Type.Value.BLINDVENETIANUS:
+                        case DomoticzValues.Device.Type.Value.BLINDPERCENTAGESTOP:
+                        case DomoticzValues.Device.Type.Value.BLINDSTOP:
                             onSwitchToggle(selectedSwitch);
                             break;
 
@@ -226,6 +230,10 @@ public class WearMessageListenerService extends WearableListenerService implemen
         boolean checked = !toggledDevice.getStatusBoolean();
         if (toggledDevice.getSwitchTypeVal() == DomoticzValues.Device.Type.Value.BLINDS ||
                 toggledDevice.getSwitchTypeVal() == DomoticzValues.Device.Type.Value.BLINDPERCENTAGE ||
+                toggledDevice.getSwitchTypeVal() == DomoticzValues.Device.Type.Value.BLINDVENETIAN ||
+                toggledDevice.getSwitchTypeVal() == DomoticzValues.Device.Type.Value.BLINDVENETIANUS ||
+                toggledDevice.getSwitchTypeVal() == DomoticzValues.Device.Type.Value.BLINDPERCENTAGESTOP ||
+                toggledDevice.getSwitchTypeVal() == DomoticzValues.Device.Type.Value.BLINDSTOP ||
                 toggledDevice.getSwitchTypeVal() == DomoticzValues.Device.Type.Value.DOORLOCKINVERTED) {
             if (checked) jsonAction = DomoticzValues.Device.Switch.Action.OFF;
             else jsonAction = DomoticzValues.Device.Switch.Action.ON;

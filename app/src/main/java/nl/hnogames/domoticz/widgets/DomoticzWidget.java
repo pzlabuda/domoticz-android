@@ -151,9 +151,11 @@ public class DomoticzWidget extends AppWidgetProvider {
         // Calculate aspect ratio to determine orientation
         float aspectRatio = minHeight > 0 ? (float) minHeight / (float) minWidth : 1.0f;
 
-        // Use compact layout ONLY for very small 1-cell widgets (1x2 or 2x1)
-        // But still respect orientation even for these
-        if ((minWidth < 150 && minHeight < 220) || (minHeight < 150 && minWidth < 220)) {
+        if (minWidth < 110 && minHeight < 110) {
+            // 1x1 tiny widget - icon + name + status, all centered, no toggle button
+            layoutId = R.layout.widget_tiny;
+            layoutName = "tiny (1x1)";
+        } else if ((minWidth < 150 && minHeight < 220) || (minHeight < 150 && minWidth < 220)) {
             // Very small 1x2 or 2x1 widget
             if (aspectRatio > 1.2f) {
                 // 1x2 vertical - use detailed/vertical for better display
@@ -190,6 +192,11 @@ public class DomoticzWidget extends AppWidgetProvider {
 
         // Populate widget data
         populateWidgetData(context, views, data, widgetId);
+
+        // Tiny 1x1 layout has no room for a toggle button — ensure it stays hidden
+        if (layoutId == R.layout.widget_tiny) {
+            views.setViewVisibility(R.id.widget_toggle_button, android.view.View.GONE);
+        }
 
         return views;
     }

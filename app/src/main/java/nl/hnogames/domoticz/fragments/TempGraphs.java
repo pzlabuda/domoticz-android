@@ -4,10 +4,8 @@ package nl.hnogames.domoticz.fragments;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
-import android.content.res.Resources;
 import android.os.Bundle;
 import android.util.Log;
-import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -17,17 +15,13 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 import androidx.core.util.Pair;
-import androidx.fragment.app.Fragment;
 
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.github.mikephil.charting.charts.LineChart;
-import com.github.mikephil.charting.components.Legend;
 import com.github.mikephil.charting.components.XAxis;
-import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
-import com.github.mikephil.charting.formatter.ValueFormatter;
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
 import com.google.android.material.datepicker.CalendarConstraints;
 import com.google.android.material.datepicker.MaterialDatePicker;
@@ -44,14 +38,14 @@ import java.util.Map;
 
 import nl.hnogames.domoticz.R;
 import nl.hnogames.domoticz.helpers.StaticHelper;
-import nl.hnogames.domoticz.interfaces.DomoticzFragmentListener;
+import nl.hnogames.domoticz.ui.GraphMarkerView;
 import nl.hnogames.domoticz.utils.MaterialColorPalette;
 import nl.hnogames.domoticzapi.Containers.GraphPointInfo;
 import nl.hnogames.domoticzapi.Containers.TemperatureInfo;
 import nl.hnogames.domoticzapi.Interfaces.GraphDataReceiver;
 import nl.hnogames.domoticzapi.Interfaces.TemperatureReceiver;
 
-public class TempGraphs extends Fragment implements DomoticzFragmentListener {
+public class TempGraphs extends BaseGraphFragment {
 
     @SuppressWarnings("unused")
     private static final String TAG = TempGraphs.class.getSimpleName();
@@ -68,7 +62,6 @@ public class TempGraphs extends Fragment implements DomoticzFragmentListener {
     private LineChart chart;
     private View root;
     private Context mContext;
-    private String range = "day";
     private Integer[] selectedFilters;
     private String firstDateStr = "";
     private String endDateStr = "";
@@ -196,60 +189,16 @@ public class TempGraphs extends Fragment implements DomoticzFragmentListener {
     }
 
     public void setUpGraphView() {
-        Legend legend = chart.getLegend();
-        legend.setWordWrapEnabled(true);
-        legend.setForm(Legend.LegendForm.CIRCLE);
-        TypedValue typedValue = new TypedValue();
-        Resources.Theme theme = context.getTheme();
-        theme.resolveAttribute(R.attr.graphTextColor, typedValue, true);
+        setupChartAppearance(chart, context);
+        GraphMarkerView markerView = new GraphMarkerView(context, range.equals("day") || range.equals("minute"));
+        markerView.setChartView(chart);
+        chart.setMarker(markerView);
         XAxis xAxis = chart.getXAxis();
-        YAxis yAxis = chart.getAxisLeft();
-        xAxis.setTextColor(typedValue.data);
-        yAxis.setTextColor(typedValue.data);
-        chart.getLegend().setTextColor(typedValue.data);
-        chart.setDrawGridBackground(true);
-        chart.getDescription().setEnabled(false);
-        xAxis.setDrawGridLines(false); // no grid lines
-        chart.getAxisRight().setEnabled(false); // no right axis
-        chart.setDragDecelerationFrictionCoef(0.9f);
-        chart.setDragEnabled(true);
-        chart.setScaleEnabled(true);
-        chart.setDrawGridBackground(false);
-        chart.setHighlightPerDragEnabled(true);
-
         if (range.equals("minute")) {
-            xAxis.setValueFormatter(new ValueFormatter() {
-                @Override
-                public String getFormattedValue(float value) {
-                    Calendar calendar = Calendar.getInstance();
-                    calendar.setTimeInMillis((long) value);
-                    return String.format(Locale.getDefault(), "%02d", calendar.get(Calendar.HOUR_OF_DAY)) + ":" + String.format(Locale.getDefault(), "%02d", calendar.get(Calendar.MINUTE));
-                }
-            });
+            xAxis.setValueFormatter(createHourMinuteFormatter());
         } else {
-            xAxis.setValueFormatter(new ValueFormatter() {
-                @Override
-                public String getFormattedValue(float value) {
-                    Calendar calendar = Calendar.getInstance();
-                    calendar.setTimeInMillis((long) value);
-
-                    int mMonth = calendar.get(Calendar.MONTH) + 1;
-                    int mDay = calendar.get(Calendar.DAY_OF_MONTH);
-                    int mHours = calendar.get(Calendar.HOUR_OF_DAY);
-                    int mMinutes = calendar.get(Calendar.MINUTE);
-
-                    String xValue;
-                    if (mHours <= 0 && mMinutes <= 0)
-                        xValue = String.format(Locale.getDefault(), "%02d", mHours) + ":" + String.format(Locale.getDefault(), "%02d", mMinutes);
-                    else
-                        xValue = mDay + "/" + mMonth + " " + String.format(Locale.getDefault(), "%02d", mHours) + ":" + String.format(Locale.getDefault(), "%02d", mMinutes);
-                    return xValue;
-                }
-            });
+            xAxis.setValueFormatter(createDateTimeFormatter());
         }
-
-        xAxis.setLabelRotationAngle(90);
-        xAxis.setLabelCount(15);
     }
 
     private boolean canShowDialog() {
@@ -278,6 +227,7 @@ public class TempGraphs extends Fragment implements DomoticzFragmentListener {
                              Bundle savedInstanceState) {
         root = inflater.inflate(R.layout.dialog_temp_graphs, null);
         chart = root.findViewById(R.id.chart);
+        setUpGraphView();
         return root;
     }
 
@@ -365,7 +315,7 @@ public class TempGraphs extends Fragment implements DomoticzFragmentListener {
                             valuesse.add(new Entry(mydate.getTimeInMillis(), g.getSetPoint()));
                         }
 
-                        if (g.getBarometer() != null && g.getBarometer().length() > 0) {
+                        if (isValidGraphValue(g.getBarometer())) {
                             addBarometer = true;
                             try {
                                 valuesba.add(new Entry(mydate.getTimeInMillis(), Integer.parseInt(g.getBarometer())));
@@ -374,7 +324,7 @@ public class TempGraphs extends Fragment implements DomoticzFragmentListener {
                             }
                         }
 
-                        if (g.getHumidity() != null && g.getHumidity().length() > 0) {
+                        if (isValidGraphValue(g.getHumidity())) {
                             addHumidity = true;
                             try {
                                 valueshu.add(new Entry(mydate.getTimeInMillis(), Integer.parseInt(g.getHumidity())));
@@ -392,7 +342,7 @@ public class TempGraphs extends Fragment implements DomoticzFragmentListener {
                     dataSet.setColor(MaterialColorPalette.getRandomColor("600"));
                     dataSet.setLineWidth(2);
                     dataSet.setDrawCircles(false);
-                    dataSet.setMode(LineDataSet.Mode.LINEAR);
+                    dataSet.setMode(smoothMode());
                     entries.add(dataSet);
 
                     if (addSetpoint) {
@@ -400,7 +350,7 @@ public class TempGraphs extends Fragment implements DomoticzFragmentListener {
                         dataSet.setColor(MaterialColorPalette.getRandomColor("600"));
                         dataSet.setLineWidth(2);
                         dataSet.setDrawCircles(false);
-                        dataSet.setMode(LineDataSet.Mode.LINEAR);
+                        dataSet.setMode(LineDataSet.Mode.LINEAR); // set point is a discrete step, not smooth
                         entries.add(dataSet);
                     }
 
@@ -409,7 +359,7 @@ public class TempGraphs extends Fragment implements DomoticzFragmentListener {
                         dataSet.setColor(MaterialColorPalette.getRandomColor("600"));
                         dataSet.setLineWidth(2);
                         dataSet.setDrawCircles(false);
-                        dataSet.setMode(LineDataSet.Mode.LINEAR);
+                        dataSet.setMode(smoothMode());
                         dataSet.setDrawFilled(true);
                         dataSet.setFillColor(MaterialColorPalette.getRandomColor("300"));
                         entries.add(dataSet);
@@ -418,7 +368,7 @@ public class TempGraphs extends Fragment implements DomoticzFragmentListener {
                         dataSet.setColor(MaterialColorPalette.getRandomColor("600"));
                         dataSet.setLineWidth(2);
                         dataSet.setDrawCircles(false);
-                        dataSet.setMode(LineDataSet.Mode.LINEAR);
+                        dataSet.setMode(smoothMode());
                         dataSet.setFillAlpha(255);
                         dataSet.setFillColor(MaterialColorPalette.getRandomColor("300"));
                         dataSet.setDrawFilled(true);
@@ -431,7 +381,7 @@ public class TempGraphs extends Fragment implements DomoticzFragmentListener {
                     dataSet.setColor(MaterialColorPalette.getRandomColor("600"));
                     dataSet.setLineWidth(2);
                     dataSet.setDrawCircles(false);
-                    dataSet.setMode(LineDataSet.Mode.LINEAR);
+                    dataSet.setMode(smoothMode()); // humidity changes gradually
                     entries.add(dataSet);
                 }
 
@@ -440,7 +390,7 @@ public class TempGraphs extends Fragment implements DomoticzFragmentListener {
                     dataSet.setColor(MaterialColorPalette.getRandomColor("600"));
                     dataSet.setLineWidth(2);
                     dataSet.setDrawCircles(false);
-                    dataSet.setMode(LineDataSet.Mode.LINEAR);
+                    dataSet.setMode(smoothMode()); // barometer changes slowly
                     entries.add(dataSet);
                 }
 

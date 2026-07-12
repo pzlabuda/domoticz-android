@@ -916,6 +916,16 @@ public class Domoticz {
         GetResultRequest(parser, url, true);
     }
 
+    public void getGraphDataForDate(int idx, String range, String type, String date, GraphDataReceiver receiver) {
+        GraphDataParser parser = new GraphDataParser(receiver);
+        String url = mDomoticzUrls.constructGetUrl(DomoticzValues.Json.Url.Request.GRAPH) + idx;
+        url += DomoticzValues.Url.Log.GRAPH_RANGE + range;
+        url += DomoticzValues.Url.Log.GRAPH_TYPE + type;
+        url += "&date=" + date;
+        Log.i("GRAPH", "url: " + url);
+        GetResultRequest(parser, url, true);
+    }
+
     public void getTempGraphData(int idx, String range, int graphType,
                                  boolean graphTemp, boolean graphChill, boolean graphHum, boolean graphBaro, boolean graphDew, boolean graphSet,
                                  GraphDataReceiver receiver) {

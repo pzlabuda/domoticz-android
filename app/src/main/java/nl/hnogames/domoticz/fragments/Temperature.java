@@ -16,6 +16,7 @@ import com.google.android.material.snackbar.Snackbar;
 import com.google.common.reflect.TypeToken;
 
 import java.util.ArrayList;
+import java.util.Locale;
 
 import nl.hnogames.domoticz.GraphActivity;
 import nl.hnogames.domoticz.MainActivity;
@@ -268,6 +269,7 @@ public class Temperature extends DomoticzRecyclerFragment implements DomoticzFra
         intent.putExtra("IDX", temp.getIdx());
         intent.putExtra("RANGE", range);
         intent.putExtra("TYPE", "temp");
+        intent.putExtra("TITLE", temp.getName().toUpperCase(Locale.getDefault()));
         intent.putExtra("STEPS", 3);
         startActivity(intent);
     }

@@ -46,43 +46,13 @@
                 app:icon_type="star" />
 
             <com.google.android.material.chip.Chip
-                android:id="@+id/day_button"
+                android:id="@+id/graph_button"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="10dp"
                 android:layout_marginTop="-5dp"
                 android:layout_marginBottom="-5dp"
-                android:text="@string/button_status_day"
-                android:visibility="gone" />
-
-            <com.google.android.material.chip.Chip
-                android:id="@+id/week_button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="10dp"
-                android:layout_marginTop="-5dp"
-                android:layout_marginBottom="-5dp"
-                android:text="@string/button_status_week"
-                android:visibility="gone" />
-
-            <com.google.android.material.chip.Chip
-                android:id="@+id/month_button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="10dp"
-                android:layout_marginTop="-5dp"
-                android:layout_marginBottom="-5dp"
-                android:text="@string/button_status_month"
-                android:visibility="gone" />
-
-            <com.google.android.material.chip.Chip
-                android:id="@+id/year_button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="10dp"
-                android:layout_marginTop="-5dp"
-                android:layout_marginBottom="-5dp"
-                android:text="@string/button_status_year"
+                android:text="@string/button_status_graph"
                 android:visibility="gone" />
 
             <com.google.android.material.chip.Chip

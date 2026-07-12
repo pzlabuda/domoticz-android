@@ -316,35 +316,11 @@ public class UtilityAdapter extends RecyclerView.Adapter<UtilityAdapter.DataObje
                 holder.data.append(" " + context.getString(R.string.total) + ": " + mUtilitiesInfo.getCounterDeliv());
         }
 
-        holder.dayButton.setId(mUtilitiesInfo.getIdx());
-        holder.dayButton.setOnClickListener(v -> {
+        holder.graphButton.setId(mUtilitiesInfo.getIdx());
+        holder.graphButton.setOnClickListener(v -> {
             for (UtilitiesInfo t : filteredData) {
                 if (t.getIdx() == v.getId())
                     listener.onLogClick(t, DomoticzValues.Graph.Range.DAY);
-            }
-        });
-        holder.monthButton.setId(mUtilitiesInfo.getIdx());
-        holder.monthButton.setOnClickListener(v -> {
-            for (UtilitiesInfo t : filteredData) {
-                if (t.getIdx() == v.getId())
-                    listener.onLogClick(t, DomoticzValues.Graph.Range.MONTH);
-            }
-        });
-
-        holder.weekButton.setVisibility(View.GONE);
-        holder.weekButton.setId(mUtilitiesInfo.getIdx());
-        holder.weekButton.setOnClickListener(v -> {
-            for (UtilitiesInfo t : filteredData) {
-                if (t.getIdx() == v.getId())
-                    listener.onLogClick(t, DomoticzValues.Graph.Range.WEEK);
-            }
-        });
-
-        holder.yearButton.setId(mUtilitiesInfo.getIdx());
-        holder.yearButton.setOnClickListener(v -> {
-            for (UtilitiesInfo t : filteredData) {
-                if (t.getIdx() == v.getId())
-                    listener.onLogClick(t, DomoticzValues.Graph.Range.YEAR);
             }
         });
 
@@ -378,45 +354,11 @@ public class UtilityAdapter extends RecyclerView.Adapter<UtilityAdapter.DataObje
         holder.on_button.setId(mUtilitiesInfo.getIdx());
         holder.on_button.setOnClickListener(v -> handleThermostatClick(v.getId()));
 
-        holder.dayButton.setId(mUtilitiesInfo.getIdx());
-        holder.dayButton.setOnClickListener(v -> {
+        holder.graphButton.setId(mUtilitiesInfo.getIdx());
+        holder.graphButton.setOnClickListener(v -> {
             for (UtilitiesInfo t : filteredData) {
                 if (t.getIdx() == v.getId())
                     listener.onLogClick(t, DomoticzValues.Graph.Range.DAY);
-            }
-        });
-        holder.monthButton.setId(mUtilitiesInfo.getIdx());
-        holder.monthButton.setOnClickListener(v -> {
-            for (UtilitiesInfo t : filteredData) {
-                if (t.getIdx() == v.getId())
-                    listener.onLogClick(t, DomoticzValues.Graph.Range.MONTH);
-            }
-        });
-
-        holder.weekButton.setVisibility(View.GONE);
-        holder.weekButton.setId(mUtilitiesInfo.getIdx());
-        holder.weekButton.setOnClickListener(v -> {
-            for (UtilitiesInfo t : filteredData) {
-                if (t.getIdx() == v.getId())
-                    listener.onLogClick(t, DomoticzValues.Graph.Range.WEEK);
-            }
-        });
-
-        if (mUtilitiesInfo.getSubType()
-                .replace("Electric", "counter")
-                .replace("kWh", "counter")
-                .replace("Gas", "counter")
-                .replace("Energy", "counter")
-                .replace("Voltcraft", "counter")
-                .replace("SetPoint", "temp")
-                .replace("YouLess counter", "counter").contains("counter"))
-            holder.weekButton.setVisibility(View.VISIBLE);
-
-        holder.yearButton.setId(mUtilitiesInfo.getIdx());
-        holder.yearButton.setOnClickListener(v -> {
-            for (UtilitiesInfo t : filteredData) {
-                if (t.getIdx() == v.getId())
-                    listener.onLogClick(t, DomoticzValues.Graph.Range.YEAR);
             }
         });
 
@@ -497,17 +439,8 @@ public class UtilityAdapter extends RecyclerView.Adapter<UtilityAdapter.DataObje
         if (holder.buttonLog != null) {
             holder.buttonLog.setVisibility(View.GONE);
         }
-        if (holder.dayButton != null) {
-            holder.dayButton.setVisibility(View.GONE);
-        }
-        if (holder.monthButton != null) {
-            holder.monthButton.setVisibility(View.GONE);
-        }
-        if (holder.yearButton != null) {
-            holder.yearButton.setVisibility(View.GONE);
-        }
-        if (holder.weekButton != null) {
-            holder.weekButton.setVisibility(View.GONE);
+        if (holder.graphButton != null) {
+            holder.graphButton.setVisibility(View.GONE);
         }
         if (holder.on_button != null) {
             holder.on_button.setVisibility(View.GONE);
@@ -525,10 +458,7 @@ public class UtilityAdapter extends RecyclerView.Adapter<UtilityAdapter.DataObje
             case Buttons.DEFAULT:
                 if (holder.contentWrapper != null)
                     holder.contentWrapper.setVisibility(View.VISIBLE);
-                holder.dayButton.setVisibility(View.VISIBLE);
-                holder.monthButton.setVisibility(View.VISIBLE);
-                holder.weekButton.setVisibility(View.VISIBLE);
-                holder.yearButton.setVisibility(View.VISIBLE);
+                holder.graphButton.setVisibility(View.VISIBLE);
                 if (holder.adview != null)
                     holder.adview.setVisibility(View.GONE);
                 break;
@@ -543,20 +473,14 @@ public class UtilityAdapter extends RecyclerView.Adapter<UtilityAdapter.DataObje
                 if (holder.contentWrapper != null)
                     holder.contentWrapper.setVisibility(View.VISIBLE);
                 holder.on_button.setVisibility(View.VISIBLE);
-                holder.dayButton.setVisibility(View.VISIBLE);
-                holder.monthButton.setVisibility(View.VISIBLE);
-                holder.weekButton.setVisibility(View.VISIBLE);
-                holder.yearButton.setVisibility(View.VISIBLE);
+                holder.graphButton.setVisibility(View.VISIBLE);
                 if (holder.adview != null)
                     holder.adview.setVisibility(View.GONE);
                 break;
             case Buttons.THERMOSTAT_MODE:
                 if (holder.contentWrapper != null)
                     holder.contentWrapper.setVisibility(View.VISIBLE);
-                holder.dayButton.setVisibility(View.VISIBLE);
-                holder.monthButton.setVisibility(View.VISIBLE);
-                holder.weekButton.setVisibility(View.VISIBLE);
-                holder.yearButton.setVisibility(View.VISIBLE);
+                holder.graphButton.setVisibility(View.VISIBLE);
                 holder.spSelector.setVisibility(View.VISIBLE);
                 if (holder.adview != null)
                     holder.adview.setVisibility(View.GONE);
@@ -623,10 +547,7 @@ public class UtilityAdapter extends RecyclerView.Adapter<UtilityAdapter.DataObje
         TextView data;
         TextView hardware;
         ImageView iconRow;
-        Chip dayButton;
-        Chip monthButton;
-        Chip yearButton;
-        Chip weekButton;
+        Chip graphButton;
         Chip buttonLog;
         Button on_button;
         ImageView infoIcon;
@@ -641,10 +562,7 @@ public class UtilityAdapter extends RecyclerView.Adapter<UtilityAdapter.DataObje
 
             contentWrapper = itemView.findViewById(R.id.contentWrapper);
             adview = itemView.findViewById(R.id.adview);
-            dayButton = itemView.findViewById(R.id.day_button);
-            monthButton = itemView.findViewById(R.id.month_button);
-            yearButton = itemView.findViewById(R.id.year_button);
-            weekButton = itemView.findViewById(R.id.week_button);
+            graphButton = itemView.findViewById(R.id.graph_button);
             likeButton = itemView.findViewById(R.id.fav_button);
 
             infoIcon = itemView.findViewById(R.id.widget_info_icon);

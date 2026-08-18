@@ -4,20 +4,33 @@ import android.annotation.TargetApi;
 import android.app.assist.AssistContent;
 import android.os.Build;
 import android.os.Bundle;
+import android.view.View;
+import android.view.ViewGroup;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import com.google.android.material.appbar.AppBarLayout;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 public class AppCompatAssistActivity extends AppCompatActivity {
+
+    /**
+     * System bars (status + navigation) and display cutout insets.
+     */
+    private static final int INSET_TYPES =
+            WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        // Enable edge-to-edge display for Android 15+ compatibility
+        // Enable edge-to-edge display on all API levels: the system bars stay
+        // transparent and this app is responsible for the insets.
         EdgeToEdge.enable(this);
         super.onCreate(savedInstanceState);
     }
@@ -30,173 +43,95 @@ public class AppCompatAssistActivity extends AppCompatActivity {
     }
 
     /**
-     * Apply window insets to handle edge-to-edge display properly.
-     * Based on Android 15 edge-to-edge best practices.
-     * See: https://medium.com/androiddevelopers/insets-handling-tips-for-android-15s-edge-to-edge-enforcement
+     * Apply window insets for the edge-to-edge display.
+     *
+     * Two supported layout shapes:
+     * <ol>
+     * <li>CoordinatorLayout + AppBarLayout (main screen, settings, logs, ...):
+     * the app bar draws edge-to-edge under the status bar and pads itself for
+     * it (fitsSystemWindows); the CoordinatorLayout is padded on the left,
+     * right and bottom so the scrolling content, snackbars and anchored views
+     * stay above the navigation bar.</li>
+     * <li>Standalone Toolbar without an AppBarLayout (update, temp graphs, ...):
+     * the toolbar pads itself for the status bar and the layout root is padded
+     * on the left, right and bottom.</li>
+     * </ol>
+     * Insets are never consumed on the padded host, so the AppBarLayout (or
+     * the toolbar) still receives the top inset.
      */
     protected void applyWindowInsets() {
-        // Handle CoordinatorLayout + AppBarLayout (MainActivity layouts)
-        handleCoordinatorLayoutWithAppBar();
+        View content = findViewById(android.R.id.content);
+        if (!(content instanceof ViewGroup) || ((ViewGroup) content).getChildCount() == 0) {
+            return;
+        }
+        View layoutRoot = ((ViewGroup) content).getChildAt(0);
 
-        // Handle standalone Toolbar layouts (GraphActivity, Settings, etc.)
-        handleStandaloneToolbar();
-
-        // Handle bottom content (AdView, etc.)
-        handleBottomContent();
-    }
-
-    /**
-     * Handle CoordinatorLayout with AppBarLayout using fitsSystemWindows approach.
-     * This allows AppBarLayout to draw edge-to-edge under system bars.
-     */
-    private void handleCoordinatorLayoutWithAppBar() {
-        androidx.coordinatorlayout.widget.CoordinatorLayout coordinator =
-            findViewById(getResources().getIdentifier("coordinator_layout", "id", getPackageName()));
-        com.google.android.material.appbar.AppBarLayout appBar = findViewById(getAppBarId());
-
-        if (coordinator != null && appBar != null) {
-            // Set fitsSystemWindows on both CoordinatorLayout and AppBarLayout
-            // This makes AppBarLayout draw under the status bar automatically
-            coordinator.setFitsSystemWindows(true);
+        AppBarLayout appBar = findFirstView(layoutRoot, AppBarLayout.class);
+        if (appBar != null) {
+            // The app bar extends under the status bar and pads itself for it.
             appBar.setFitsSystemWindows(true);
 
-            // Handle main content to avoid being hidden under AppBarLayout
-            handleContentUnderAppBar(appBar);
+            // The rest of the content must avoid the left/right/bottom system
+            // bars. Prefer the CoordinatorLayout as inset host so snackbars and
+            // anchored views inside it stay above the navigation bar too.
+            View insetHost = findFirstView(layoutRoot, CoordinatorLayout.class);
+            if (insetHost == null) {
+                insetHost = layoutRoot;
+            }
+            if (insetHost instanceof ViewGroup) {
+                // Do not rely on the XML attribute; the listener below owns the
+                // left/right/bottom padding (top stays 0, the app bar handles it).
+                insetHost.setFitsSystemWindows(false);
+                ViewCompat.setOnApplyWindowInsetsListener(insetHost, (v, insets) -> {
+                    Insets i = insets.getInsets(INSET_TYPES);
+                    v.setPadding(i.left, v.getPaddingTop(), i.right, i.bottom);
+                    // Not consumed: the AppBarLayout still needs the top inset.
+                    return insets;
+                });
+            }
+        } else {
+            // No app bar: a standalone toolbar draws under the status bar.
+            Toolbar toolbar = findFirstView(layoutRoot, Toolbar.class);
+            if (toolbar != null) {
+                ViewCompat.setOnApplyWindowInsetsListener(toolbar, (v, insets) -> {
+                    Insets i = insets.getInsets(INSET_TYPES);
+                    v.setPadding(v.getPaddingLeft(), i.top,
+                            v.getPaddingRight(), v.getPaddingBottom());
+                    // Not consumed: the layout root still needs the insets.
+                    return insets;
+                });
+            }
+
+            // The rest of the screen avoids the left/right/bottom system bars.
+            if (layoutRoot instanceof ViewGroup) {
+                layoutRoot.setFitsSystemWindows(false);
+                ViewCompat.setOnApplyWindowInsetsListener(layoutRoot, (v, insets) -> {
+                    Insets i = insets.getInsets(INSET_TYPES);
+                    v.setPadding(i.left, v.getPaddingTop(), i.right, i.bottom);
+                    return insets;
+                });
+            }
         }
     }
 
     /**
-     * Apply insets to main content that scrolls under AppBarLayout.
-     * This ensures content appears after the AppBarLayout is laid out.
+     * Depth-first search for the first view of the given type (inclusive of
+     * the starting view).
      */
-    private void handleContentUnderAppBar(com.google.android.material.appbar.AppBarLayout appBar) {
-        // Find the scrolling content (NestedScrollView or RecyclerView)
-        androidx.core.widget.NestedScrollView scrollView =
-            findViewById(getResources().getIdentifier("nested_scroll_view", "id", getPackageName()));
-        androidx.recyclerview.widget.RecyclerView recyclerView =
-            findViewById(getResources().getIdentifier("RecyclerView", "id", getPackageName()));
-
-        android.view.View scrollingView = scrollView != null ? scrollView : recyclerView;
-
-        if (scrollingView != null) {
-            ViewCompat.setOnApplyWindowInsetsListener(scrollingView, (v, windowInsets) -> {
-                Insets insets = windowInsets.getInsets(
-                    WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout()
-                );
-
-                // Apply padding after AppBarLayout is laid out to account for its height
-                appBar.post(() -> {
-                    v.setPadding(
-                        insets.left,
-                        appBar.getHeight(), // Use AppBar height instead of status bar
-                        insets.right,
-                        insets.bottom
-                    );
-                });
-
-                // For RecyclerView/NestedScrollView, set clipToPadding=false for immersive scrolling
-                if (v instanceof androidx.recyclerview.widget.RecyclerView) {
-                    ((androidx.recyclerview.widget.RecyclerView) v).setClipToPadding(false);
-                } else if (v instanceof androidx.core.widget.NestedScrollView) {
-                    ((androidx.core.widget.NestedScrollView) v).setClipToPadding(false);
+    private <T extends View> T findFirstView(View view, Class<T> type) {
+        if (type.isInstance(view)) {
+            return type.cast(view);
+        }
+        if (view instanceof ViewGroup) {
+            ViewGroup group = (ViewGroup) view;
+            for (int i = 0; i < group.getChildCount(); i++) {
+                T found = findFirstView(group.getChildAt(i), type);
+                if (found != null) {
+                    return found;
                 }
-
-                return WindowInsetsCompat.CONSUMED;
-            });
-        }
-    }
-
-    /**
-     * Handle standalone Toolbar layouts (not inside AppBarLayout).
-     * Apply insets using ViewCompat listener for consistent behavior.
-     */
-    private void handleStandaloneToolbar() {
-        androidx.appcompat.widget.Toolbar toolbar = findViewById(getToolbarId());
-
-        if (toolbar != null) {
-            // Check if toolbar is standalone (not in AppBarLayout)
-            android.view.ViewParent parent = toolbar.getParent();
-            boolean isStandalone = !(parent instanceof com.google.android.material.appbar.CollapsingToolbarLayout);
-            if (parent != null && parent.getParent() instanceof com.google.android.material.appbar.AppBarLayout) {
-                isStandalone = false;
-            }
-
-            if (isStandalone) {
-                // Find the root layout containing the toolbar
-                android.view.View rootLayout = findViewById(getResources().getIdentifier("phoneLayoutWrapper", "id", getPackageName()));
-                if (rootLayout == null) {
-                    rootLayout = (android.view.View) toolbar.getParent();
-                }
-
-                final android.view.View finalRootLayout = rootLayout;
-                ViewCompat.setOnApplyWindowInsetsListener(finalRootLayout, (v, windowInsets) -> {
-                    Insets insets = windowInsets.getInsets(
-                        WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout()
-                    );
-
-                    // Apply padding to push toolbar down from status bar
-                    if (toolbar.getLayoutParams() instanceof android.view.ViewGroup.MarginLayoutParams) {
-                        android.view.ViewGroup.MarginLayoutParams params =
-                            (android.view.ViewGroup.MarginLayoutParams) toolbar.getLayoutParams();
-                        params.topMargin = insets.top;
-                        toolbar.setLayoutParams(params);
-                    }
-
-                    // Handle main content area
-                    android.view.View mainContent = findViewById(getResources().getIdentifier("main", "id", getPackageName()));
-                    if (mainContent != null) {
-                        mainContent.setPadding(
-                            insets.left,
-                            0, // Toolbar already handles top
-                            insets.right,
-                            insets.bottom
-                        );
-                    }
-
-                    return WindowInsetsCompat.CONSUMED;
-                });
             }
         }
-    }
-
-    /**
-     * Handle bottom content like AdView to ensure it doesn't hide under navigation bar.
-     */
-    private void handleBottomContent() {
-        int adViewId = getResources().getIdentifier("adView", "id", getPackageName());
-        if (adViewId != 0) {
-            android.view.View adView = findViewById(adViewId);
-            if (adView != null) {
-                ViewCompat.setOnApplyWindowInsetsListener(adView, (v, windowInsets) -> {
-                    Insets insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
-
-                    if (v.getLayoutParams() instanceof android.view.ViewGroup.MarginLayoutParams) {
-                        android.view.ViewGroup.MarginLayoutParams params =
-                            (android.view.ViewGroup.MarginLayoutParams) v.getLayoutParams();
-                        params.bottomMargin = insets.bottom;
-                        v.setLayoutParams(params);
-                    }
-
-                    return windowInsets;
-                });
-            }
-        }
-    }
-
-    /**
-     * Override this to return the toolbar ID if your activity has a toolbar
-     * Default is R.id.toolbar
-     */
-    protected int getToolbarId() {
-        return getResources().getIdentifier("toolbar", "id", getPackageName());
-    }
-
-    /**
-     * Override this to return the AppBar ID if your activity has an AppBarLayout
-     * Default is R.id.appBar
-     */
-    protected int getAppBarId() {
-        return getResources().getIdentifier("appBar", "id", getPackageName());
+        return null;
     }
 
     @Override
@@ -210,7 +145,7 @@ public class AppCompatAssistActivity extends AppCompatActivity {
                             .put("author", "Domoticz")
                             .put("name", "Domoticz")
                             .put("id", "http://www.domoticz.com")
-                            .put("description", "Domoticz is a very light weight home automation system that lets you monitor and configure miscellaneous devices, including lights, switches, various sensors/meters like temperature, rainfall, wind, ultraviolet (UV) radiation, electricity usage/production, gas consumption, water consumption and many more."
+                            .put("description", "Domoticz is a very light weight home automation system that lets you monitor and configure miscellaneous devices, including lights, switches, various sensors/meters like temperature, rainfall, wind, ultraviolet (UV) radiation, electricity usage/production, gas consumption and many more."
                             ).toString()
             );
         } catch (JSONException e) {

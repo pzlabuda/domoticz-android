@@ -9,8 +9,7 @@
         android:id="@+id/coordinator_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_above="@+id/adView"
-        android:fitsSystemWindows="true">
+        android:layout_above="@+id/adView">
 
         <com.github.zagum.speechrecognitionview.RecognitionProgressView
             android:id="@+id/recognition_view"

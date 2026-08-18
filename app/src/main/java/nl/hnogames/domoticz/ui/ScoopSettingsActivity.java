@@ -10,12 +10,7 @@ import android.view.View;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.StringRes;
-import androidx.activity.EdgeToEdge;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -24,8 +19,9 @@ import com.ftinc.scoop.Scoop;
 
 import nl.hnogames.domoticz.R;
 import nl.hnogames.domoticz.adapters.FlavorRecyclerAdapter;
+import nl.hnogames.domoticz.app.AppCompatAssistActivity;
 
-public class ScoopSettingsActivity extends AppCompatActivity implements FlavorRecyclerAdapter.OnItemClickListener {
+public class ScoopSettingsActivity extends AppCompatAssistActivity implements FlavorRecyclerAdapter.OnItemClickListener {
 
     private static final String EXTRA_TITLE = "com.ftinc.scoop.intent.EXTRA_TITLE";
     private Toolbar mAppBar;
@@ -50,8 +46,7 @@ public class ScoopSettingsActivity extends AppCompatActivity implements FlavorRe
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        // Enable edge-to-edge display
-        EdgeToEdge.enable(this);
+        // Edge-to-edge + insets are handled by AppCompatAssistActivity
         super.onCreate(savedInstanceState);
 
         // Store the initial flavor to detect changes
@@ -63,33 +58,10 @@ public class ScoopSettingsActivity extends AppCompatActivity implements FlavorRe
         // Set the activity content
         setContentView(R.layout.activity_theme_settings);
 
-        // Apply window insets
-        applyWindowInsets();
-
         // Setup UI
         parseExtras(savedInstanceState);
         setupActionBar();
         setupRecyclerView();
-    }
-
-    private void applyWindowInsets() {
-        View appBar = findViewById(R.id.appBar);
-        if (appBar != null) {
-            ViewCompat.setOnApplyWindowInsetsListener(appBar, (v, windowInsets) -> {
-                Insets insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
-                v.setPadding(insets.left, insets.top, insets.right, 0);
-                return windowInsets;
-            });
-        }
-
-        View recycler = findViewById(R.id.recycler);
-        if (recycler != null) {
-            ViewCompat.setOnApplyWindowInsetsListener(recycler, (v, windowInsets) -> {
-                Insets insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
-                v.setPadding(v.getPaddingLeft(), v.getPaddingTop(), v.getPaddingRight(), insets.bottom);
-                return WindowInsetsCompat.CONSUMED;
-            });
-        }
     }
 
     @Override

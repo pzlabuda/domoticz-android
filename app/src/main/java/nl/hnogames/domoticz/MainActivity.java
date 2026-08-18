@@ -53,6 +53,7 @@ import com.mikepenz.materialdrawer.model.PrimaryDrawerItem;
 import com.mikepenz.materialdrawer.model.ProfileDrawerItem;
 import com.mikepenz.materialdrawer.model.SecondaryDrawerItem;
 import com.mikepenz.materialdrawer.model.interfaces.IDrawerItem;
+import com.mikepenz.materialize.view.ScrimInsetsRelativeLayout;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -1050,6 +1051,41 @@ public class MainActivity extends AppCompatPermissionsActivity {
                 })
                 .build();
         drawer.addStickyFooterItem(createSecondaryDrawerItem(this.getString(R.string.action_settings), "gmd_settings", "Settings"));
+        applyDrawerInsets();
+    }
+
+    /**
+     * Pad the drawer's sticky footer with the real window insets.
+     *
+     * MaterialDrawer only pads the sticky footer for the navigation bar when
+     * built with withTranslucentNavigationBar/withFullscreen, and even then
+     * with a static bar height. Under edge-to-edge the drawer slider extends
+     * under the navigation bar, so the sticky footer (Settings) would be
+     * covered and unclickable. The drawer slider (ScrimInsetsRelativeLayout)
+     * still receives the real insets (re-dispatched by the DrawerLayout) and
+     * fires its OnInsetsCallback with them, so use that to pad the footer
+     * reactively. The recycler is aligned ABOVE the footer by the library, so
+     * it stays clear of the bar automatically.
+     */
+    private void applyDrawerInsets() {
+        if (drawer == null)
+            return;
+        ScrimInsetsRelativeLayout slider = drawer.getSlider();
+        View footer = drawer.getStickyFooter();
+        if (slider == null)
+            return;
+
+        slider.setOnInsetsCallback(insets -> {
+            Insets i = insets.getInsets(WindowInsetsCompat.Type.systemBars()
+                    | WindowInsetsCompat.Type.displayCutout());
+            if (footer != null) {
+                footer.setPadding(
+                        Math.max(footer.getPaddingLeft(), i.left),
+                        footer.getPaddingTop(),
+                        Math.max(footer.getPaddingRight(), i.right),
+                        Math.max(footer.getPaddingBottom(), i.bottom));
+            }
+        });
     }
 
     public void OpenSettings() {

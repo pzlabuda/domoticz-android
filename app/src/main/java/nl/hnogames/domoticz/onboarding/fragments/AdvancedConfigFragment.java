@@ -101,6 +101,11 @@ public class AdvancedConfigFragment extends Fragment implements OnPermissionCall
 
         observeViewModel();
 
+        // Android 16 (API 36)+ needs ACCESS_LOCAL_NETWORK to reach the Domoticz server on a local IP
+        if (!PermissionsUtil.canAccessLocalNetwork(getActivity())) {
+            permissionFragmentHelper.request(PermissionsUtil.INITIAL_LOCAL_NETWORK_PERMS);
+        }
+
         btnTestConnection.setOnClickListener(v -> {
             saveToViewModel();
             Navigation.findNavController(v).navigate(R.id.action_advanced_config_to_connection_test);
@@ -250,10 +255,18 @@ public class AdvancedConfigFragment extends Fragment implements OnPermissionCall
     @Override
     public void onPermissionDeclined(@NonNull String[] permissionName) {
         Log.i("onPermissionDeclined", "Permission(s) " + Arrays.toString(permissionName) + " Declined");
-        String[] neededPermission = PermissionFragmentHelper.declinedPermissions(this, PermissionsUtil.INITIAL_LOCATION_PERMS);
-        AlertDialog alert = PermissionsUtil.getAlertDialog(getActivity(), permissionFragmentHelper,
-                getString(R.string.permission_title),
-                getString(R.string.permission_desc_location), neededPermission);
+        String[] neededLocalNetwork = PermissionFragmentHelper.declinedPermissions(this, PermissionsUtil.INITIAL_LOCAL_NETWORK_PERMS);
+        String[] neededLocation = PermissionFragmentHelper.declinedPermissions(this, PermissionsUtil.INITIAL_LOCATION_PERMS);
+        AlertDialog alert;
+        if (neededLocalNetwork.length > 0) {
+            alert = PermissionsUtil.getAlertDialog(getActivity(), permissionFragmentHelper,
+                    getString(R.string.permission_title),
+                    getString(R.string.permission_desc_local_network), neededLocalNetwork);
+        } else {
+            alert = PermissionsUtil.getAlertDialog(getActivity(), permissionFragmentHelper,
+                    getString(R.string.permission_title),
+                    getString(R.string.permission_desc_location), neededLocation);
+        }
         if (alert != null && !alert.isShowing()) {
             alert.show();
         }

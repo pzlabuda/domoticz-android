@@ -907,6 +907,16 @@ public class MainActivity extends AppCompatPermissionsActivity {
         }
     }
 
+    /**
+     * Android 16 (API 36)+ requires ACCESS_LOCAL_NETWORK for connecting to the
+     * Domoticz server on a local IP. Ask for it once, only when not yet granted.
+     */
+    private void ensureLocalNetworkPermission() {
+        if (!PermissionsUtil.canAccessLocalNetwork(this)) {
+            permissionHelper.request(PermissionsUtil.INITIAL_LOCAL_NETWORK_PERMS);
+        }
+    }
+
     private void GetFirebaseToken() {
         if (!FirebaseConfigHelper.initializeFirebase(this, mSharedPrefs)) {
             Log.w(TAG, "Firebase is not initialized; skipping token refresh");
@@ -1527,6 +1537,7 @@ public class MainActivity extends AppCompatPermissionsActivity {
         super.onResume();
 
         setScreenAlwaysOn();
+        ensureLocalNetworkPermission();
         if (listeningSpeechRecognition) {
             startRecognition();
         }
@@ -1624,6 +1635,12 @@ public class MainActivity extends AppCompatPermissionsActivity {
         if (builder.toString().contains("android.permission.RECORD_AUDIO")) {
             if (PermissionsUtil.canAccessAudioState(this)) {
                 startRecognition();
+            }
+        }
+        if (builder.toString().contains("android.permission.ACCESS_LOCAL_NETWORK")) {
+            if (PermissionsUtil.canAccessLocalNetwork(this) && latestFragment instanceof RefreshFragment) {
+                // local network access granted - retry reaching the local server right away
+                ((RefreshFragment) latestFragment).RefreshFragment();
             }
         }
         super.onPermissionGranted(permissionName);

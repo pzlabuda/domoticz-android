@@ -55,6 +55,11 @@ public class PermissionsUtil {
     public static final String[] INITIAL_FINGERPRINT_PERMS = {
             Manifest.permission.USE_BIOMETRIC
     };
+    //these permissions are needed for connecting to devices on the local network (Domoticz on LAN IP)
+    //only enforced as a runtime permission on Android 16 (API 36)+
+    public static final String[] INITIAL_LOCAL_NETWORK_PERMS = {
+            Manifest.permission.ACCESS_LOCAL_NETWORK
+    };
     //these permissions are needed for beacons
     public static final String[] INITIAL_BEACON_PERMS = {
             Manifest.permission.BLUETOOTH,
@@ -107,6 +112,19 @@ public class PermissionsUtil {
 
     public static boolean canAccessDeviceState(Context context) {
         return (hasPermission(Manifest.permission.READ_PHONE_STATE, context));
+    }
+
+    /**
+     * ACCESS_LOCAL_NETWORK is a runtime permission on Android 16 (API 36) and newer.
+     * On older releases the platform does not gate local network connections, so it is
+     * treated as granted there.
+     */
+    public static boolean canAccessLocalNetwork(Context context) {
+        // 36 = Build.VERSION_CODES for Android 16; literal keeps this independent of SDK constant names
+        if (Build.VERSION.SDK_INT < 36) {
+            return true;
+        }
+        return hasPermission(Manifest.permission.ACCESS_LOCAL_NETWORK, context);
     }
 
     public static boolean canAccessAudioState(Context context) {
